@@ -211,6 +211,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             placeholder: "${widget.htmlEditorOptions.hint}",
             tabsize: 2,
             height: ${widget.otherOptions.height},
+            disableResizeEditor: false,
             disableGrammar: false,
             spellCheck: ${widget.htmlEditorOptions.spellCheck},
             maximumFileSize: $maximumFileSize,
