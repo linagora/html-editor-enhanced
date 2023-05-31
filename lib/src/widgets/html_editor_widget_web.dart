@@ -317,10 +317,25 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 \$('.note-status-output').empty();
               }
               if (data["type"].includes("execCommand")) {
-                if (data["argument"] === null) {
-                  document.execCommand(data["command"], false);
+                var commandType = data["command"];
+                if (commandType === "hiliteColor") {
+                  if (data["argument"] === null) {
+                    if (!document.execCommand("hiliteColor", false)) {
+                      console.log("Browser not support document.execCommand('hiliteColor')");
+                      document.execCommand("backColor", false);
+                    }
+                  } else {
+                    if (!document.execCommand("hiliteColor", false, data["argument"])) {
+                      console.log("Browser not support document.execCommand('hiliteColor')");
+                      document.execCommand("backColor", false, data["argument"]);
+                    }
+                  }
                 } else {
-                  document.execCommand(data["command"], false, data["argument"]);
+                  if (data["argument"] === null) {
+                    document.execCommand(commandType, false);
+                  } else {
+                    document.execCommand(commandType, false, data["argument"]);
+                  }
                 }
               }
               if (data["type"].includes("changeListStyle")) {
@@ -420,7 +435,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           var fontName;
           var fontSize = 16;
           var foreColor = "000000";
-          var backColor = "FFFF00";
+          var backColor = "FFFFFF";
           var focusNode2 = \$(window.getSelection().focusNode);
           var parentList = focusNode2.closest("div.note-editable ol, div.note-editable ul");
           var parentListType = parentList.css('list-style-type');
@@ -444,7 +459,11 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             parent = document.queryCommandValue('formatBlock');
             fontSize = document.queryCommandValue('fontSize');
             foreColor = document.queryCommandValue('foreColor');
-            backColor = document.queryCommandValue('hiliteColor');
+            backColor = document.queryCommandValue('hiliteColor')
+            if (!backColor) {
+               console.log("Browser not support queryCommandValue('hiliteColor')");
+               backColor = document.queryCommandValue('backColor');
+            }
             fontName = document.queryCommandValue('fontName');
           }
           var message = {
