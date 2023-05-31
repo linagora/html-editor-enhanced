@@ -77,7 +77,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   Color _foreColorSelected = Colors.black;
 
   /// Sets the selected item for the background color dialog
-  Color _backColorSelected = Colors.yellow;
+  Color _backColorSelected = Colors.white;
 
   /// Sets the selected item for the list style dropdown
   String? _listStyleSelectedItem;
@@ -131,6 +131,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   /// Updates the toolbar from the JS handler on mobile and the onMessage
   /// listener on web
   void updateToolbar(Map<String, dynamic> json) {
+    debugPrint('ToolbarWidget::updateToolbar::json: $json');
     //get parent element
     String parentElem = json['style'] ?? '';
     //get font name
@@ -174,6 +175,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
         _fontNameSelectedItem = 'sans-serif';
       });
     }
+    debugPrint('ToolbarWidget::updateToolbar::colorList: $colorList');
     //update the fore/back selected color if necessary
     if (colorList[0] != null && colorList[0]!.isNotEmpty) {
       setState(mounted, this.setState, () {
@@ -189,12 +191,18 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
     }
     if (colorList[1] != null && colorList[1]!.isNotEmpty) {
       setState(mounted, this.setState, () {
-        _backColorSelected =
-            Color(int.parse(colorList[1]!, radix: 16) + 0xFF000000);
+        var rgb = colorList[1]!.replaceAll('rgb(', '').replaceAll(')', '');
+        var rgbList = rgb.split(', ');
+        _backColorSelected = Color.fromRGBO(
+          int.parse(rgbList[0]),
+          int.parse(rgbList[1]),
+          int.parse(rgbList[2]),
+          1
+        );
       });
     } else {
       setState(mounted, this.setState, () {
-        _backColorSelected = Colors.yellow;
+        _backColorSelected = Colors.white;
       });
     }
     //check the list style if it matches one of the predetermined styles and update the toolbar
@@ -1092,7 +1100,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     true;
                 if (proceed) {
                   widget.controller.execCommand('hiliteColor',
-                      argument: (Colors.yellow.value & 0xFFFFFF)
+                      argument: (Colors.white.value & 0xFFFFFF)
                           .toRadixString(16)
                           .padLeft(6, '0')
                           .toUpperCase());
@@ -1180,7 +1188,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                     if (t.getIcons()[index].icon ==
                                         Icons.format_color_fill) {
                                       setState(mounted, this.setState, () {
-                                        _backColorSelected = Colors.yellow;
+                                        _backColorSelected = Colors.white;
                                       });
                                       widget.controller.execCommand(
                                           'removeFormat',
