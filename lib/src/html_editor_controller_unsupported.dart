@@ -183,4 +183,7 @@ class HtmlEditorController {
 
   /// Remove signature from compose email
   void removeSignature() {}
+
+  /// Update body direction on web
+  void updateBodyDirection(String direction) {}
 }

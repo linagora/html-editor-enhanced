@@ -31,4 +31,11 @@ class JavascriptUtils {
       nodeSignature[0].remove();
     }
   ''';
+
+  static const String jsHandleUpdateBodyDirection = '''
+    const nodeEditor = document.getElementsByClassName('note-editable')[0];
+    const currentDirection = data['direction'];
+    console.log('currentDirection: ' + currentDirection);
+    nodeEditor.style.direction = currentDirection.toString();
+  ''';
 }

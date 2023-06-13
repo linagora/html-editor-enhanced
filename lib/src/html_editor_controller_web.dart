@@ -357,4 +357,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void removeSignature() {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: removeSignature'});
   }
+
+  @override
+  void updateBodyDirection(String direction) {
+    _evaluateJavascriptWeb(data: {'type': 'toIframe: updateBodyDirection', 'direction': direction});
+  }
 }

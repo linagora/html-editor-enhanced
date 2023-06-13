@@ -412,6 +412,13 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
+              
+              if (data["type"].includes("updateBodyDirection")) {
+                ${JavascriptUtils.jsHandleUpdateBodyDirection}
+
+                const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
+                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
+              }
               $userScripts
             }
           }
