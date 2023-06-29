@@ -177,7 +177,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
     }
     debugPrint('ToolbarWidget::updateToolbar::colorList: $colorList');
     //update the fore/back selected color if necessary
-    if (colorList[0] != null && colorList[0]!.isNotEmpty) {
+    if (colorList[0] != null && colorList[0]!.isNotEmpty && colorList[0]!.startsWith('rgb')) {
       setState(mounted, this.setState, () {
         var rgb = colorList[0]!.replaceAll('rgb(', '').replaceAll(')', '');
         var rgbList = rgb.split(', ');
@@ -189,7 +189,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
         _foreColorSelected = Colors.black;
       });
     }
-    if (colorList[1] != null && colorList[1]!.isNotEmpty) {
+    if (colorList[1] != null && colorList[1]!.isNotEmpty && colorList[1]!.startsWith('rgb')) {
       setState(mounted, this.setState, () {
         var rgb = colorList[1]!.replaceAll('rgb(', '').replaceAll(')', '');
         var rgbList = rgb.split(', ');
