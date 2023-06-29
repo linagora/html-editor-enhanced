@@ -177,28 +177,65 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
     }
     debugPrint('ToolbarWidget::updateToolbar::colorList: $colorList');
     //update the fore/back selected color if necessary
-    if (colorList[0] != null && colorList[0]!.isNotEmpty && colorList[0]!.startsWith('rgb')) {
+    final foregroundColor = colorList[0];
+    if (foregroundColor != null && foregroundColor.isNotEmpty) {
       setState(mounted, this.setState, () {
-        var rgb = colorList[0]!.replaceAll('rgb(', '').replaceAll(')', '');
-        var rgbList = rgb.split(', ');
-        _foreColorSelected = Color.fromRGBO(int.parse(rgbList[0]),
-            int.parse(rgbList[1]), int.parse(rgbList[2]), 1);
+        if (foregroundColor.startsWith('rgb(')) {
+          var rgb = foregroundColor.replaceAll('rgb(', '').replaceAll(')', '');
+          var rgbList = rgb.split(', ');
+          if (rgbList.length >= 3) {
+            _foreColorSelected = Color.fromRGBO(
+              int.parse(rgbList[0]),
+              int.parse(rgbList[1]),
+              int.parse(rgbList[2]),
+              1
+            );
+          }
+        } else if (foregroundColor.startsWith('rgba(')) {
+          var rgba = foregroundColor.replaceAll('rgba(', '').replaceAll(')', '');
+          var rgbaList = rgba.split(', ');
+          if (rgbaList.length >= 4) {
+            _foreColorSelected = Color.fromRGBO(
+              int.parse(rgbaList[0]),
+              int.parse(rgbaList[1]),
+              int.parse(rgbaList[2]),
+              double.parse(rgbaList[3])
+            );
+          }
+        }
       });
     } else {
       setState(mounted, this.setState, () {
         _foreColorSelected = Colors.black;
       });
     }
-    if (colorList[1] != null && colorList[1]!.isNotEmpty && colorList[1]!.startsWith('rgb')) {
+
+    final backgroundColor = colorList[1];
+    if (backgroundColor != null && backgroundColor.isNotEmpty) {
       setState(mounted, this.setState, () {
-        var rgb = colorList[1]!.replaceAll('rgb(', '').replaceAll(')', '');
-        var rgbList = rgb.split(', ');
-        _backColorSelected = Color.fromRGBO(
-          int.parse(rgbList[0]),
-          int.parse(rgbList[1]),
-          int.parse(rgbList[2]),
-          1
-        );
+        if (backgroundColor.startsWith('rgb(')) {
+          var rgb = backgroundColor.replaceAll('rgb(', '').replaceAll(')', '');
+          var rgbList = rgb.split(', ');
+          if (rgbList.length >= 3) {
+            _backColorSelected = Color.fromRGBO(
+              int.parse(rgbList[0]),
+              int.parse(rgbList[1]),
+              int.parse(rgbList[2]),
+              1
+            );
+          }
+        } else if (backgroundColor.startsWith('rgba(')) {
+          var rgba = backgroundColor.replaceAll('rgba(', '').replaceAll(')', '');
+          var rgbaList = rgba.split(', ');
+          if (rgbaList.length >= 4) {
+            _backColorSelected = Color.fromRGBO(
+              int.parse(rgbaList[0]),
+              int.parse(rgbaList[1]),
+              int.parse(rgbaList[2]),
+              double.parse(rgbaList[3])
+            );
+          }
+        }
       });
     } else {
       setState(mounted, this.setState, () {
