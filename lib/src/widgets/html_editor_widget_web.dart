@@ -424,6 +424,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
         }
         
+        ${JavascriptUtils.jsDetectBrowser}
+        
         function onSelectionChange() {
           let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
           var isBold = false;
@@ -472,6 +474,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                backColor = document.queryCommandValue('backColor');
             }
             fontName = document.queryCommandValue('fontName');
+          }
+          const browserName = getBrowserName();
+          console.log('browserName: ' + browserName)
+          if (browserName === "Firefox") {
+            backColor = \$(focusNode.parentNode).css('background-color');
+            console.log('backColor-Firefox: ' + backColor);
           }
           var message = {
             'view': "$createdViewId", 

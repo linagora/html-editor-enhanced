@@ -38,4 +38,42 @@ class JavascriptUtils {
     console.log('currentDirection: ' + currentDirection);
     nodeEditor.style.direction = currentDirection.toString();
   ''';
+
+  static const String jsDetectBrowser = '''
+    function getBrowserName() {
+      // Opera 8.0+
+      if ((window.opr && window.opr.addons)
+        || window.opera
+        || navigator.userAgent.indexOf(' OPR/') >= 0) {
+        return 'Opera';
+      }
+    
+      // Firefox 1.0+
+      if (/Firefox|FxiOS/.test(navigator.userAgent)) {
+        return 'Firefox';
+      }
+    
+      // Safari 3.0+ "[object HTMLElementConstructor]"
+      if (/constructor/i.test(window.HTMLElement) || (function (p) {
+        return p.toString() === '[object SafariRemoteNotification]';
+      })(!window['safari'])) {
+        return 'Safari';
+      }
+    
+      // Internet Explorer 6-11
+      if (/* @cc_on!@*/false || document.documentMode) {
+        return 'Internet Explorer';
+      }
+    
+      // Edge 20+
+      if (!(document.documentMode) && window.StyleMedia) {
+        return 'Microsoft Edge';
+      }
+      
+      // Chrome
+      if (window.chrome) {
+        return 'Chrome';
+      }
+    }
+  ''';
 }
