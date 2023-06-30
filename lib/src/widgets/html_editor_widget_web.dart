@@ -338,6 +338,16 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                   }
                 }
               }
+              if (data["type"].includes("execSummernoteAPI")) {
+                var nameAPI = data["nameAPI"];
+                var value = data["value"];
+                console.log("nameAPI: " + nameAPI + " | value: " + value);
+                if (value === null) {
+                  \$('#summernote-2').summernote(nameAPI);
+                } else {
+                  \$('#summernote-2').summernote(nameAPI, value);
+                }
+              }
               if (data["type"].includes("changeListStyle")) {
                 var \$focusNode = \$(window.getSelection().focusNode);
                 var \$parentList = \$focusNode.closest("div.note-editable ol, div.note-editable ul");

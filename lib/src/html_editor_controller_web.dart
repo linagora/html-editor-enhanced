@@ -246,6 +246,16 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     });
   }
 
+  /// A function to quickly call a Summernote API function in a readable format
+  @override
+  void execSummernoteAPI(String nameAPI, {String? value}) {
+    _evaluateJavascriptWeb(data: {
+      'type': 'toIframe: execSummernoteAPI',
+      'nameAPI': nameAPI,
+      'value': value
+    });
+  }
+
   /// A function to execute JS passed as a [WebScript] to the editor. This should
   /// only be used on Flutter Web.
   @override
