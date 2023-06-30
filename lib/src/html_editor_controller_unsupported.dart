@@ -81,6 +81,9 @@ class HtmlEditorController {
   /// A function to quickly call a document.execCommand function in a readable format
   void execCommand(String command, {String? argument}) {}
 
+  /// A function to quickly call a Summernote API function in a readable format
+  void execSummernoteAPI(String nameAPI, {String? value}) {}
+
   /// A function to execute JS passed as a [WebScript] to the editor. This should
   /// only be used on Flutter Web.
   Future<dynamic> evaluateJavascriptWeb(String name,
