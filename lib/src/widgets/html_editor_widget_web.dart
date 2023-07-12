@@ -226,7 +226,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
        
         window.parent.addEventListener('message', handleMessage, false);
         document.onselectionchange = onSelectionChange;
-        console.log('done');
       
         function handleMessage(e) {
           if (e && e.data && e.data.includes("toIframe:")) {
@@ -321,12 +320,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 if (commandType === "hiliteColor") {
                   if (data["argument"] === null) {
                     if (!document.execCommand("hiliteColor", false)) {
-                      console.log("Browser not support document.execCommand('hiliteColor')");
                       document.execCommand("backColor", false);
                     }
                   } else {
                     if (!document.execCommand("hiliteColor", false, data["argument"])) {
-                      console.log("Browser not support document.execCommand('hiliteColor')");
                       document.execCommand("backColor", false, data["argument"]);
                     }
                   }
@@ -341,7 +338,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               if (data["type"].includes("execSummernoteAPI")) {
                 var nameAPI = data["nameAPI"];
                 var value = data["value"];
-                console.log("nameAPI: " + nameAPI + " | value: " + value);
                 if (value === null) {
                   \$('#summernote-2').summernote(nameAPI);
                 } else {
@@ -370,7 +366,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                       var texto;
                       var count = 0;
                       var value = data["case"];
-                      console.log(value);
                       var nodes = selected.nodes();
                       for (var i=0; i< nodes.length; ++i) {
                           if (nodes[i].nodeName == "#text") {
@@ -480,16 +475,13 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             foreColor = document.queryCommandValue('foreColor');
             backColor = document.queryCommandValue('hiliteColor')
             if (!backColor) {
-               console.log("Browser not support queryCommandValue('hiliteColor')");
                backColor = document.queryCommandValue('backColor');
             }
             fontName = document.queryCommandValue('fontName');
           }
           const browserName = getBrowserName();
-          console.log('browserName: ' + browserName)
           if (browserName === "Firefox") {
             backColor = \$(focusNode.parentNode).css('background-color');
-            console.log('backColor-Firefox: ' + backColor);
           }
           var message = {
             'view': "$createdViewId", 

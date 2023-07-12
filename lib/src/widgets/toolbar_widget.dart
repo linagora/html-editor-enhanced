@@ -131,7 +131,9 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   /// Updates the toolbar from the JS handler on mobile and the onMessage
   /// listener on web
   void updateToolbar(Map<String, dynamic> json) {
-    debugPrint('ToolbarWidget::updateToolbar::json: $json');
+    if (kDebugMode) {
+      print('ToolbarWidget::updateToolbar::json: $json');
+    }
     //get parent element
     String parentElem = json['style'] ?? '';
     //get font name
@@ -175,7 +177,9 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
         _fontNameSelectedItem = 'sans-serif';
       });
     }
-    debugPrint('ToolbarWidget::updateToolbar::colorList: $colorList');
+    if (kDebugMode) {
+      print('ToolbarWidget::updateToolbar::colorList: $colorList');
+    }
     //update the fore/back selected color if necessary
     final foregroundColor = colorList[0];
     if (foregroundColor != null && foregroundColor.isNotEmpty) {
