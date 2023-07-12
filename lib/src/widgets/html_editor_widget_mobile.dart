@@ -429,7 +429,6 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                               foreColor = document.queryCommandValue('foreColor');
                               backColor = document.queryCommandValue('hiliteColor');
                               if (!backColor) {
-                                 console.log("Browser not support queryCommandValue('hiliteColor')");
                                  backColor = document.queryCommandValue('backColor');
                               }
                               fontName = document.queryCommandValue('fontName');
