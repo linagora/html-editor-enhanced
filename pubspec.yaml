@@ -23,7 +23,7 @@ dependencies:
   # plugin to get files from filesystem
   file_picker: ^5.2.5
   # plugin to show a scrollable number picker for inserting tables
-  numberpicker: ^2.1.1
+  numberpicker: ^2.1.2
   # plugin to allow dropdowns and dialogs to be interactable when displaying over the editor
   pointer_interceptor: ^0.9.3+4
   # plugin to help maintain effective Dart standards
