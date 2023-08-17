@@ -429,6 +429,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
         }
         
+        ${JavascriptUtils.jsHandleLazyLoadImage}
         ${JavascriptUtils.jsDetectBrowser}
         
         function onSelectionChange() {
