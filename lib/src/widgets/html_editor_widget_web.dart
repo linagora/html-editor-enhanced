@@ -516,6 +516,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         .replaceFirst('<!--summernoteScripts-->', summernoteScripts)
         .replaceFirst('<!--customBodyCssStyle-->',
             widget.htmlEditorOptions.customBodyCssStyle)
+        .replaceFirst('<!--customScripts-->', widget.htmlEditorOptions.customScripts)
         .replaceFirst(
             '<!--blockQuotedContent-->', widget.blockQuotedContent ?? '')
         .replaceFirst('"jquery.min.js"',
