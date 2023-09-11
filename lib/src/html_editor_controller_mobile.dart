@@ -77,6 +77,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     return text ?? '';
   }
 
+  /// Gets the text from the editor and returns it as a [String]. With signature content
+  @override
+  Future<String> getTextWithSignatureContent() => Future.value('');
+
   /// Sets the text of the editor. Some pre-processing is applied to convert
   /// [String] elements like "\n" to HTML elements.
   @override

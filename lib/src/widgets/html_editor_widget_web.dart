@@ -24,7 +24,6 @@ class HtmlEditorWidget extends StatefulWidget {
     required this.htmlToolbarOptions,
     required this.otherOptions,
     required this.initBC,
-    this.blockQuotedContent,
   }) : super(key: key);
 
   final HtmlEditorController controller;
@@ -34,7 +33,6 @@ class HtmlEditorWidget extends StatefulWidget {
   final HtmlToolbarOptions htmlToolbarOptions;
   final OtherOptions otherOptions;
   final BuildContext initBC;
-  final String? blockQuotedContent;
 
   @override
   State<HtmlEditorWidget> createState() => _HtmlEditorWidgetWebState();
@@ -235,6 +233,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 var str = \$('#summernote-2').summernote('code');
                 window.parent.postMessage(JSON.stringify({"type": "toDart: getText", "text": str}), "*");
               }
+              if (data["type"].includes("getTextWithSignatureContent")) {
+                ${JavascriptUtils.jsHandleReplaceSignatureContent}
+                
+                var str = \$('#summernote-2').summernote('code');
+                window.parent.postMessage(JSON.stringify({"type": "toDart: getTextWithSignatureContent", "text": str}), "*");
+              }
               if (data["type"].includes("getHeight")) {
                 var height = document.body.scrollHeight;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: htmlHeight", "height": height}), "*");
@@ -429,6 +433,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
         }
         
+        ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
         
         function onSelectionChange() {
@@ -516,8 +521,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         .replaceFirst('<!--summernoteScripts-->', summernoteScripts)
         .replaceFirst('<!--customBodyCssStyle-->',
             widget.htmlEditorOptions.customBodyCssStyle)
-        .replaceFirst(
-            '<!--blockQuotedContent-->', widget.blockQuotedContent ?? '')
         .replaceFirst('"jquery.min.js"',
             '"assets/packages/html_editor_enhanced/assets/jquery.min.js"')
         .replaceFirst('"summernote-lite.min.css"',
