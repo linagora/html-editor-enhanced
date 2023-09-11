@@ -66,6 +66,21 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     return text;
   }
 
+  /// Gets the text with signature content from the editor and returns it as a [String].
+  @override
+  Future<String> getTextWithSignatureContent() async {
+    _evaluateJavascriptWeb(data: {'type': 'toIframe: getTextWithSignatureContent'});
+    var e = await html.window.onMessage.firstWhere(
+            (element) => json.decode(element.data)['type'] == 'toDart: getTextWithSignatureContent');
+    String text = json.decode(e.data)['text'];
+    if (processOutputHtml &&
+        (text.isEmpty ||
+            text == '<p></p>' ||
+            text == '<p><br></p>' ||
+            text == '<p><br/></p>')) text = '';
+    return text;
+  }
+
   @override
   Future<String> getSelectedTextWeb({bool withHtmlTags = false}) async {
     if (withHtmlTags) {
@@ -360,7 +375,11 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   void insertSignature(String signature) {
     _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: insertSignature', 'signature': signature});
+      data: {
+        'type': 'toIframe: insertSignature',
+        'signature': signature,
+      }
+    );
   }
 
   @override

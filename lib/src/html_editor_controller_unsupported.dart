@@ -93,6 +93,9 @@ class HtmlEditorController {
   /// Gets the text from the editor and returns it as a [String].
   Future<String> getText() => Future.value('');
 
+  /// Gets the text from the editor and returns it as a [String]. With signature content
+  Future<String> getTextWithSignatureContent() => Future.value('');
+
   /// Gets the selected HTML from the editor. You should use
   /// [controller.editorController.getSelectedText()] on mobile.
   ///
