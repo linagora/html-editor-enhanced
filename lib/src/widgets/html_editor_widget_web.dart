@@ -526,7 +526,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         .replaceFirst('"summernote-lite.min.css"',
             '"assets/packages/html_editor_enhanced/assets/summernote-lite.min.css"')
         .replaceFirst('"summernote-lite.min.js"',
-            '"assets/packages/html_editor_enhanced/assets/summernote-lite.min.js"');
+            '"assets/packages/html_editor_enhanced/assets/summernote-lite-v2.min.js"');
     if (widget.callbacks != null) addJSListener(widget.callbacks!);
 
     final currentContextBC = widget.initBC;
