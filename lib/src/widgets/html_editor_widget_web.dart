@@ -138,32 +138,33 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       if (widget.callbacks!.onImageUpload != null) {
         summernoteCallbacks =
             """$summernoteCallbacks          onImageUpload: function(files) {
-            var reader = new FileReader();
-            var base64 = "<an error occurred>";
-            reader.onload = function (_) {
-              base64 = reader.result;
-              var newObject = {
-                 'lastModified': files[0].lastModified,
-                 'lastModifiedDate': files[0].lastModifiedDate,
-                 'name': files[0].name,
-                 'size': files[0].size,
-                 'type': files[0].type,
-                 'base64': base64
+            var reader = new FileReader();  
+            function readFile(index) {
+              if (index >= files.length) return;
+              let file = files[index];
+
+              reader.onload = function (e) {
+                let base64 = e.target.result;
+                let fileUpload = {
+                   'lastModified': file.lastModified,
+                   'lastModifiedDate': file.lastModifiedDate,
+                   'name': file.name,
+                   'size': file.size,
+                   'type': file.type,
+                   'base64': base64
+                };
+                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "fileUpload": fileUpload}), "*");
+                readFile(index+1);
               };
-              window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "lastModified": files[0].lastModified, "lastModifiedDate": files[0].lastModifiedDate, "name": files[0].name, "size": files[0].size, "mimeType": files[0].type, "base64": base64}), "*");
-            };
-            reader.onerror = function (_) {
-              var newObject = {
-                 'lastModified': files[0].lastModified,
-                 'lastModifiedDate': files[0].lastModifiedDate,
-                 'name': files[0].name,
-                 'size': files[0].size,
-                 'type': files[0].type,
-                 'base64': base64
+              
+              reader.onerror = function (_) {
+                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "error": "base64"}), "*");
+                readFile(index+1);
               };
-              window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "lastModified": files[0].lastModified, "lastModifiedDate": files[0].lastModifiedDate, "name": files[0].name, "size": files[0].size, "mimeType": files[0].type, "base64": base64}), "*");
-            };
-            reader.readAsDataURL(files[0]);
+              
+              reader.readAsDataURL(file);
+            }
+            readFile(0);
           },
         """;
       }
@@ -173,7 +174,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 if (typeof file === 'string') {
                   window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "base64": file, "error": error}), "*");
                 } else {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "lastModified": file.lastModified, "lastModifiedDate": file.lastModifiedDate, "name": file.name, "size": file.size, "mimeType": file.type, "error": error}), "*");
+                  let fileUploadError = {
+                     'lastModified': file.lastModified,
+                     'lastModifiedDate': file.lastModifiedDate,
+                     'name': file.name,
+                     'size': file.size,
+                     'type': file.type
+                  };
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "fileUploadError": fileUploadError, "error": error}), "*");
                 }
               },
             """;
@@ -796,46 +804,37 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           c.onImageLinkInsert!.call(data['url']);
         }
         if (data['type'].contains('onImageUpload')) {
-          var map = <String, dynamic>{
-            'lastModified': data['lastModified'],
-            'lastModifiedDate': data['lastModifiedDate'],
-            'name': data['name'],
-            'size': data['size'],
-            'type': data['mimeType'],
-            'base64': data['base64']
-          };
-          var jsonStr = json.encode(map);
-          var file = fileUploadFromJson(jsonStr);
-          c.onImageUpload!.call(file);
+          final fileUpload = data['fileUpload'];
+          if (fileUpload != null) {
+            final jsonStr = jsonEncode(fileUpload);
+            var file = fileUploadFromJson(jsonStr);
+            c.onImageUpload!.call(file);
+          } else {
+            c.onImageUploadError!.call(null, null, UploadError.jsException);
+          }
         }
         if (data['type'].contains('onImageUploadError')) {
-          if (data['base64'] != null) {
-            c.onImageUploadError!.call(
-                null,
-                data['base64'],
-                data['error'].contains('base64')
-                    ? UploadError.jsException
-                    : data['error'].contains('unsupported')
-                        ? UploadError.unsupportedFile
-                        : UploadError.exceededMaxSize);
+          final error = data['error'];
+          UploadError uploadError;
+          if (error.contains('base64')) {
+            uploadError = UploadError.jsException;
+          } else if (error.contains('unsupported')) {
+            uploadError = UploadError.unsupportedFile;
           } else {
-            var map = <String, dynamic>{
-              'lastModified': data['lastModified'],
-              'lastModifiedDate': data['lastModifiedDate'],
-              'name': data['name'],
-              'size': data['size'],
-              'type': data['mimeType']
-            };
-            var jsonStr = json.encode(map);
-            var file = fileUploadFromJson(jsonStr);
-            c.onImageUploadError!.call(
-                file,
-                null,
-                data['error'].contains('base64')
-                    ? UploadError.jsException
-                    : data['error'].contains('unsupported')
-                        ? UploadError.unsupportedFile
-                        : UploadError.exceededMaxSize);
+            uploadError = UploadError.exceededMaxSize;
+          }
+
+          if (data['base64'] != null) {
+            c.onImageUploadError!.call(null, data['base64'], uploadError);
+          } else {
+            final fileUploadError = data['fileUploadError'];
+            if (fileUploadError != null) {
+              final jsonStr = jsonEncode(fileUploadError);
+              final file = fileUploadFromJson(jsonStr);
+              c.onImageUploadError!.call(file, null, uploadError);
+            } else {
+              c.onImageUploadError!.call(null, null, uploadError);
+            }
           }
         }
         if (data['type'].contains('onKeyDown')) {
