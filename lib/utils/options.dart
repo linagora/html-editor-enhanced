@@ -423,6 +423,8 @@ class OtherOptions {
           Border.fromBorderSide(BorderSide(color: Color(0xffececec), width: 1)),
     ),
     this.height = 400,
+    this.dropZoneWidth,
+    this.dropZoneHeight,
   });
 
   /// The BoxDecoration to use around the Html editor. By default, the widget
@@ -435,4 +437,10 @@ class OtherOptions {
   ///
   /// The default value is 400.
   final double height;
+
+  /// Sets the width of the DropZone widget.
+  final double? dropZoneWidth;
+
+  /// Sets the height of the DropZone widget.
+  final double? dropZoneHeight;
 }

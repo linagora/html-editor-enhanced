@@ -61,6 +61,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   /// Tracks whether the editor was disabled onInit (to avoid re-disabling on reload)
   bool alreadyDisabled = false;
 
+  final _jsonEncoder = const JsonEncoder();
+
   @override
   void initState() {
     actualHeight = widget.otherOptions.height;
@@ -68,6 +70,18 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     widget.controller.viewId = createdViewId;
     initSummernote();
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant HtmlEditorWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.otherOptions.dropZoneWidth != oldWidget.otherOptions.dropZoneWidth ||
+        widget.otherOptions.dropZoneHeight != oldWidget.otherOptions.dropZoneHeight) {
+      _setDimensionDropZoneView(
+        width: widget.otherOptions.dropZoneWidth,
+        height: widget.otherOptions.dropZoneHeight,
+      );
+    }
   }
 
   void initSummernote() async {
@@ -253,6 +267,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               }
               if (data["type"].includes("setInputType")) {
                 document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${describeEnum(widget.htmlEditorOptions.inputType)}');
+              }
+              if (data["type"].includes("setDimensionDropZone")) {
+                var styleDropZone = "";
+                if (data["height"]) {
+                  styleDropZone = "height:" + data["height"] + "px;";
+                }
+                if (data["width"]) {
+                  styleDropZone = styleDropZone + "width:" + data["width"] + "px;";
+                }
+                const nodeDropZone = document.querySelector('.note-editor > .note-dropzone');
+                if (nodeDropZone) {
+                  nodeDropZone.setAttribute('style', styleDropZone);
+                  console.log("nodeDropZone: " + nodeDropZone.outerHTML);
+                }
               }
               if (data["type"].includes("setText")) {
                 \$('#summernote-2').summernote('code', data["text"]);
@@ -570,9 +598,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         data['view'] = createdViewId;
         var data2 = <String, Object>{'type': 'toIframe: setInputType'};
         data2['view'] = createdViewId;
-        const jsonEncoder = JsonEncoder();
-        var jsonStr = jsonEncoder.convert(data);
-        var jsonStr2 = jsonEncoder.convert(data2);
+        var jsonStr = _jsonEncoder.convert(data);
+        var jsonStr2 = _jsonEncoder.convert(data2);
         html.window.onMessage.listen((event) {
           var data = json.decode(event.data);
           if (data['type'] != null &&
@@ -618,6 +645,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         });
         html.window.postMessage(jsonStr, '*');
         html.window.postMessage(jsonStr2, '*');
+
+        if (widget.otherOptions.dropZoneHeight != null ||
+            widget.otherOptions.dropZoneWidth != null) {
+          _setDimensionDropZoneView(
+            height: widget.otherOptions.dropZoneHeight,
+            width: widget.otherOptions.dropZoneWidth
+          );
+        }
       });
     ui.platformViewRegistry
         .registerViewFactory(createdViewId, (int viewId) => iframe);
@@ -860,5 +895,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
       }
     });
+  }
+
+  void _setDimensionDropZoneView({double? height, double? width}) {
+    var dataDimension = <String, Object>{
+      'type': 'toIframe: setDimensionDropZone',
+      'view': createdViewId,
+    };
+    if (height != null) {
+      dataDimension['height'] = '${height.round()}';
+    }
+    if (width != null) {
+      dataDimension['width'] = '${width.round()}';
+    }
+    final jsonDimension = _jsonEncoder.convert(dataDimension);
+    html.window.postMessage(jsonDimension, '*');
   }
 }
