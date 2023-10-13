@@ -25,6 +25,7 @@ class Callbacks {
     this.onNavigationRequestMobile,
     this.onPaste,
     this.onScroll,
+    this.onTextFontSizeChanged,
   });
 
   /// Called before certain commands are fired and the editor is in rich text view.
@@ -184,4 +185,7 @@ class Callbacks {
   /// Note: This function will be repeatedly called while the editor is scrolled.
   /// Make sure to factor that into your implementation.
   void Function()? onScroll;
+
+  /// Called whenever the mouse/finger is released and the editor is in rich text view.
+  void Function(int?)? onTextFontSizeChanged;
 }

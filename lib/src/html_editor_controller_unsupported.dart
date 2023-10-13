@@ -84,6 +84,9 @@ class HtmlEditorController {
   /// A function to quickly call a Summernote API function in a readable format
   void execSummernoteAPI(String nameAPI, {String? value}) {}
 
+  /// A function to set font size for text selected
+  void setFontSize(int size) {}
+
   /// A function to execute JS passed as a [WebScript] to the editor. This should
   /// only be used on Flutter Web.
   Future<dynamic> evaluateJavascriptWeb(String name,

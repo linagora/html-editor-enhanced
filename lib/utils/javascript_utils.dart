@@ -161,4 +161,37 @@ class JavascriptUtils {
       }
     }
   ''';
+
+  static const String jsHandleSetFontSize = '''
+    var activeFontSize = 15;
+    var style = document.createElement("style");
+    document.body.appendChild(style);
+    
+    function setFontSize(value) {
+      \$('#summernote-2').summernote('focus');
+      document.execCommand("fontSize", false, 20);
+      activeFontSize = value;
+      createStyle();
+      updateTags();
+    }
+    
+    function updateTags() {
+      var nodeEditor = document.querySelector('.note-editable');
+      var fontElements = nodeEditor.getElementsByTagName("font");
+      for (var i = 0, len = fontElements.length; i < len; ++i) {
+        if (fontElements[i].size == "7") {
+          fontElements[i].removeAttribute("size");
+          fontElements[i].style.fontSize = activeFontSize + "px";
+        }
+      }
+    }
+    
+    function createStyle() {
+      style.innerHTML = '.note-editable font[size="7"]{font-size: ' + activeFontSize + 'px}';
+    }
+    
+    \$('#summernote-2').on('summernote.keyup', function(_, e) {
+      updateTags();
+    });
+  ''';
 }

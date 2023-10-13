@@ -271,6 +271,15 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     });
   }
 
+  /// A function to set font size for text selected
+  @override
+  void setFontSize(int size) {
+    _evaluateJavascriptWeb(data: {
+      'type': 'toIframe: setFontSize',
+      'size': size
+    });
+  }
+
   /// A function to execute JS passed as a [WebScript] to the editor. This should
   /// only be used on Flutter Web.
   @override
