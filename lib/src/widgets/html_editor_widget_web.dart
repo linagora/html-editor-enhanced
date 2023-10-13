@@ -279,7 +279,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 const nodeDropZone = document.querySelector('.note-editor > .note-dropzone');
                 if (nodeDropZone) {
                   nodeDropZone.setAttribute('style', styleDropZone);
-                  console.log("nodeDropZone: " + nodeDropZone.outerHTML);
                 }
               }
               if (data["type"].includes("setText")) {
@@ -384,6 +383,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                   \$('#summernote-2').summernote(nameAPI, value);
                 }
               }
+              if (data["type"].includes("setFontSize")) {
+                setFontSize(data["size"]);
+              }
               if (data["type"].includes("changeListStyle")) {
                 var \$focusNode = \$(window.getSelection().focusNode);
                 var \$parentList = \$focusNode.closest("div.note-editable ol, div.note-editable ul");
@@ -471,6 +473,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
+        ${JavascriptUtils.jsHandleSetFontSize}
         
         function onSelectionChange() {
           let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
@@ -801,6 +804,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           });\n
         """;
     }
+    if (c.onTextFontSizeChanged != null) {
+      callbacks =
+      """$callbacks          \$('#summernote-2').on('summernote.mouseup', function(_) {
+            try {
+              var fontSize = \$(window.getSelection().getRangeAt(0).startContainer.parentNode).css("font-size")
+              fontSize = fontSize.replace("px", "");
+              var size = parseInt(fontSize);
+              window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onTextFontSizeChanged", "size": size}), "*");
+            } catch(e) {
+              console.log("JavascriptUtils::summernote.mouseup::Exception", e);
+            }
+          });\n
+        """;
+    }
     return callbacks;
   }
 
@@ -892,6 +909,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (data['type'].contains('characterCount')) {
           widget.controller.characterCount = data['totalChars'];
+        }
+        if (data['type'].contains('onTextFontSizeChanged')) {
+          c.onTextFontSizeChanged!.call(data['size']);
         }
       }
     });
