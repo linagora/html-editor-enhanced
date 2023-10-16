@@ -544,6 +544,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         
         $jsCallbacks
       </script>
+      ${widget.htmlEditorOptions.customScripts}
     """;
     var filePath =
         'packages/html_editor_enhanced/assets/summernote-no-plugins.html';
