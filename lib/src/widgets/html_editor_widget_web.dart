@@ -589,6 +589,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           window.parent.removeEventListener('message', handleMessage, false);
         });
       </script>
+      ${widget.htmlEditorOptions.customScripts}
     """;
 
     final filePath = widget.htmlEditorOptions.filePath
