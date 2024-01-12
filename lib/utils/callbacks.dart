@@ -26,6 +26,7 @@ class Callbacks {
     this.onPaste,
     this.onScroll,
     this.onTextFontSizeChanged,
+    this.onEditLink,
   });
 
   /// Called before certain commands are fired and the editor is in rich text view.
@@ -188,4 +189,8 @@ class Callbacks {
 
   /// Called whenever the mouse/finger is released and the editor is in rich text view.
   void Function(int?)? onTextFontSizeChanged;
+
+  /// Called whenever the edit button of link's popover is clicked.
+  /// This function passes the text, url, isNewWindow, and the tag's id of the link that will be updated as arguments.
+  void Function(String?, String?, bool?, String)? onEditLink;
 }
