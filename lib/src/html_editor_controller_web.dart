@@ -400,4 +400,15 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void updateBodyDirection(String direction) {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: updateBodyDirection', 'direction': direction});
   }
+
+  @override
+  void updateLink(String text, String url, bool isNewWindow, String linkTagId) {
+    _evaluateJavascriptWeb(data: {
+      'type': 'toIframe: updateLink',
+      'text': text,
+      'url': url,
+      'isNewWindow': isNewWindow,
+      'linkTagId': linkTagId
+    });
+  }
 }
