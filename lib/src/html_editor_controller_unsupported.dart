@@ -195,4 +195,7 @@ class HtmlEditorController {
 
   /// Update body direction on web
   void updateBodyDirection(String direction) {}
+
+  /// Update the link on editor
+  void updateLink(String text, String url, bool isNewWindow, String linkTagId) {}
 }
