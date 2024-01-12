@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 void main() => runApp(const HtmlEditorExampleApp());
 
@@ -162,6 +163,155 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   debugPrint('pasted into editor');
                 }, onScroll: () {
                   debugPrint('editor scrolled');
+                }, onEditLink: (String? urlDisplayText, String? url, bool? isOpenInNewTab, String linkTagId) async {
+                  print('urlDisplayText: $urlDisplayText, url: $url, isOpenInNewTab: $isOpenInNewTab, linkTagId: $linkTagId');
+                  final textLinkDialogController = TextEditingController(text: urlDisplayText);
+                  final urlLinkDialogController = TextEditingController(text: url);
+                  final textLinkDialogFocusNode = FocusNode();
+                  final urlLinkDialogFocusNode = FocusNode();
+                  final formKeyDialog = GlobalKey<FormState>();
+                  var isOpenNewTabLinkDialog = isOpenInNewTab ?? true;
+                  if (context.mounted) {
+                    await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return PointerInterceptor(
+                          child: StatefulBuilder(
+                            builder: (BuildContext contest, StateSetter setState) {
+                              return AlertDialog(
+                                title: const Text('Insert Link'),
+                                scrollable: true,
+                                content: Form(
+                                  key: formKeyDialog,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Text to display',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold
+                                        )
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: textLinkDialogController,
+                                        focusNode: textLinkDialogFocusNode,
+                                        textInputAction: TextInputAction.next,
+                                        decoration: InputDecoration(
+                                          border: const OutlineInputBorder(),
+                                          hintText: urlDisplayText
+                                        ),
+                                        onSubmitted: (_) {
+                                          urlLinkDialogFocusNode.requestFocus();
+                                        },
+                                      ),
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'URL',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold
+                                        )
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                        controller: urlLinkDialogController,
+                                        focusNode: urlLinkDialogFocusNode,
+                                        textInputAction: TextInputAction.done,
+                                        decoration: InputDecoration(
+                                          border: const OutlineInputBorder(),
+                                          hintText: url
+                                        ),
+                                        validator: (String? value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter a URL';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      Row(
+                                        children: [
+                                          SizedBox(
+                                            height: 48.0,
+                                            width: 24.0,
+                                            child: Checkbox(
+                                              value: isOpenNewTabLinkDialog,
+                                              activeColor: const Color(0xFF827250),
+                                              onChanged: (bool? value) {
+                                                setState(() {
+                                                  isOpenNewTabLinkDialog = value!;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Theme.of(context).dialogBackgroundColor,
+                                              padding: const EdgeInsets.only(
+                                                left: 5.0,
+                                                right: 5.0
+                                              )
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                isOpenNewTabLinkDialog = !isOpenNewTabLinkDialog;
+                                              });
+                                            },
+                                            child: Text(
+                                              'Open in new tab',
+                                              style: TextStyle(
+                                                color: Theme.of(context).textTheme.bodyLarge?.color
+                                              )
+                                            )
+                                          )
+                                        ],
+                                      )
+                                    ],
+                                  )
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Cancel')
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      if (formKeyDialog.currentState!.validate()) {
+                                        const htmlToolbarOptions = HtmlToolbarOptions();
+                                        var proceed = await htmlToolbarOptions.linkInsertInterceptor?.call(
+                                          textLinkDialogController.text.isEmpty
+                                            ? urlLinkDialogController.text
+                                            : textLinkDialogController.text,
+                                          urlLinkDialogController.text,
+                                          isOpenNewTabLinkDialog
+                                        ) ?? true;
+                                        if (proceed) {
+                                          controller.updateLink(
+                                            textLinkDialogController.text.isEmpty
+                                              ? urlLinkDialogController.text
+                                              : textLinkDialogController.text,
+                                            urlLinkDialogController.text,
+                                            isOpenNewTabLinkDialog,
+                                            linkTagId
+                                          );
+                                        }
+                                        if (context.mounted) {
+                                          Navigator.of(context).pop();
+                                        }
+                                      }
+                                    },
+                                    child: const Text('OK')
+                                  )
+                                ],
+                              );
+                            },
+                          )
+                        );
+                      }
+                    );
+                  }
                 }),
                 plugins: [
                   SummernoteAtMention(
