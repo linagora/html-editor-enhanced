@@ -466,6 +466,13 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
+              if (data["type"].includes("updateLink")) {
+                const linkTagId = data["linkTagId"];
+                let linkTag = document.getElementById(linkTagId);
+                linkTag.href = data["url"];
+                linkTag.target = data["isNewWindow"] ? "_blank" : "_self";
+                linkTag.innerText = data["text"];
+              }
               $userScripts
             }
           }
@@ -818,6 +825,30 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           });\n
         """;
     }
+    if (c.onEditLink != null) {
+      callbacks =
+      """$callbacks          \$('#summernote-2').on('summernote.mouseup', function(_, context) {
+            \$('.note-link-popover').off('click').on('click', function(e) {
+              if (e.target.className == 'note-icon-link' || e.target.className == 'note-btn') {
+                var linkTag = context.target;
+                const linkTagId = 'id_' + new Date().getTime();
+                linkTag.id = linkTagId;
+                var url = linkTag.href;
+                var isOpenInNewTab = linkTag.target == '_blank';
+                var urlDisplayText = linkTag.innerText;
+                window.parent.postMessage(JSON.stringify({
+                  "view": "$createdViewId",
+                  "type": "toDart: onEditLink",
+                  "url": url,
+                  "urlDisplayText": urlDisplayText,
+                  "isOpenInNewTab": isOpenInNewTab,
+                  "linkTagId": linkTagId
+                }), "*")
+              }
+            });
+          });\n
+        """;
+    }
     return callbacks;
   }
 
@@ -912,6 +943,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (data['type'].contains('onTextFontSizeChanged')) {
           c.onTextFontSizeChanged!.call(data['size']);
+        }
+        if (data['type'].contains('onEditLink')) {
+          c.onEditLink!.call(data['urlDisplayText'], data['url'], data['isOpenInNewTab'], data['linkTagId']);
         }
       }
     });
