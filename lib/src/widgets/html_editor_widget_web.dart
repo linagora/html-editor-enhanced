@@ -829,7 +829,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       callbacks =
       """$callbacks          \$('#summernote-2').on('summernote.mouseup', function(_, context) {
             \$('.note-link-popover').off('click').on('click', function(e) {
-              if (e.target.className == 'note-icon-link' || e.target.className == 'note-btn') {
+              let isNoteIconLink = false;
+              if (e.target.className === 'note-icon-link') {
+                isNoteIconLink = true;
+              } else if (e.target.className === 'note-btn') {
+                const targetChildrenArray = Array.from(e.target.children);
+                isNoteIconLink = targetChildrenArray.some(child => child.classList.contains('note-icon-link'));
+              }
+              if (isNoteIconLink) {
                 var linkTag = context.target;
                 const linkTagId = 'id_' + new Date().getTime();
                 linkTag.id = linkTagId;
