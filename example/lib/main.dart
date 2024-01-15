@@ -164,7 +164,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                 }, onScroll: () {
                   debugPrint('editor scrolled');
                 }, onEditLink: (String? urlDisplayText, String? url, bool? isOpenInNewTab, String linkTagId) async {
-                  print('urlDisplayText: $urlDisplayText, url: $url, isOpenInNewTab: $isOpenInNewTab, linkTagId: $linkTagId');
+                  debugPrint('urlDisplayText: $urlDisplayText, url: $url, isOpenInNewTab: $isOpenInNewTab, linkTagId: $linkTagId');
                   final textLinkDialogController = TextEditingController(text: urlDisplayText);
                   final urlLinkDialogController = TextEditingController(text: url);
                   final textLinkDialogFocusNode = FocusNode();
