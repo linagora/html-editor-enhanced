@@ -81,90 +81,90 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   toolbarType: ToolbarType.nativeScrollable, //by default
                   onButtonPressed:
                       (ButtonType type, bool? status, Function? updateStatus) {
-                    print(
+                    debugPrint(
                         "button '${describeEnum(type)}' pressed, the current selected status is $status");
                     return true;
                   },
                   onDropdownChanged: (DropdownType type, dynamic changed,
                       Function(dynamic)? updateSelectedItem) {
-                    print(
+                    debugPrint(
                         "dropdown '${describeEnum(type)}' changed to $changed");
                     return true;
                   },
                   mediaLinkInsertInterceptor:
                       (String url, InsertFileType type) {
-                    print(url);
+                    debugPrint('url $url');
                     return true;
                   },
                   mediaUploadInterceptor:
                       (PlatformFile file, InsertFileType type) async {
-                    print(file.name); //filename
-                    print(file.size); //size in bytes
-                    print(file.extension); //file extension (eg jpeg or mp4)
+                    debugPrint('fileName ${file.name}'); //filename
+                    debugPrint('fileSize ${file.size}'); //size in bytes
+                    debugPrint('fileExtension ${file.extension}'); //file extension (eg jpeg or mp4)
                     return true;
                   },
                 ),
                 otherOptions: const OtherOptions(height: 550),
                 callbacks: Callbacks(onBeforeCommand: (String? currentHtml) {
-                  print('html before change is $currentHtml');
+                  debugPrint('html before change is $currentHtml');
                 }, onChangeContent: (String? changed) {
-                  print('content changed to $changed');
+                  debugPrint('content changed to $changed');
                 }, onChangeCodeview: (String? changed) {
-                  print('code changed to $changed');
+                  debugPrint('code changed to $changed');
                 }, onChangeSelection: (EditorSettings settings) {
-                  print('parent element is ${settings.parentElement}');
-                  print('font name is ${settings.fontName}');
+                  debugPrint('parent element is ${settings.parentElement}');
+                  debugPrint('font name is ${settings.fontName}');
                 }, onDialogShown: () {
-                  print('dialog shown');
+                  debugPrint('dialog shown');
                 }, onEnter: () {
-                  print('enter/return pressed');
+                  debugPrint('enter/return pressed');
                 }, onFocus: () {
-                  print('editor focused');
+                  debugPrint('editor focused');
                 }, onBlur: () {
-                  print('editor unfocused');
+                  debugPrint('editor unfocused');
                 }, onBlurCodeview: () {
-                  print('codeview either focused or unfocused');
+                  debugPrint('codeview either focused or unfocused');
                 }, onInit: () {
-                  print('init');
+                  debugPrint('init');
                 },
                     //this is commented because it overrides the default Summernote handlers
                     /*onImageLinkInsert: (String? url) {
-                    print(url ?? "unknown url");
+                    debugPrint(url ?? "unknown url");
                   },
                   onImageUpload: (FileUpload file) async {
-                    print(file.name);
-                    print(file.size);
-                    print(file.type);
-                    print(file.base64);
+                    debugPrint(file.name);
+                    debugPrint(file.size);
+                    debugPrint(file.type);
+                    debugPrint(file.base64);
                   },*/
                     onImageUploadError: (FileUpload? file, String? base64Str,
                         UploadError error) {
-                  print(describeEnum(error));
-                  print(base64Str ?? '');
+                  debugPrint(describeEnum(error));
+                  debugPrint(base64Str ?? '');
                   if (file != null) {
-                    print(file.name);
-                    print(file.size);
-                    print(file.type);
+                    debugPrint('fileName ${file.name}');
+                    debugPrint('fileName ${file.size}');
+                    debugPrint('fileType ${file.type}');
                   }
                 }, onKeyDown: (int? keyCode) {
-                  print('$keyCode key downed');
-                  print(
+                  debugPrint('$keyCode key downed');
+                  debugPrint(
                       'current character count: ${controller.characterCount}');
                 }, onKeyUp: (int? keyCode) {
-                  print('$keyCode key released');
+                  debugPrint('$keyCode key released');
                 }, onMouseDown: () {
-                  print('mouse downed');
+                  debugPrint('mouse downed');
                 }, onMouseUp: () {
-                  print('mouse released');
+                  debugPrint('mouse released');
                 }, onNavigationRequestMobile: (String url) {
-                  print(url);
+                  debugPrint('url $url');
                   return NavigationActionPolicy.ALLOW;
                 }, onPaste: () {
-                  print('pasted into editor');
+                  debugPrint('pasted into editor');
                 }, onScroll: () {
-                  print('editor scrolled');
+                  debugPrint('editor scrolled');
                 }, onEditLink: (String? urlDisplayText, String? url, bool? isOpenInNewTab, String linkTagId) async {
-                  print('urlDisplayText: $urlDisplayText, url: $url, isOpenInNewTab: $isOpenInNewTab, linkTagId: $linkTagId');
+                  debugPrint('urlDisplayText: $urlDisplayText, url: $url, isOpenInNewTab: $isOpenInNewTab, linkTagId: $linkTagId');
                   final textLinkDialogController = TextEditingController(text: urlDisplayText);
                   final urlLinkDialogController = TextEditingController(text: url);
                   final textLinkDialogFocusNode = FocusNode();
@@ -323,7 +323,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       },
                       mentionsWeb: ['test1', 'test2', 'test3'],
                       onSelect: (String value) {
-                        print(value);
+                        debugPrint(value);
                       }),
                 ],
               ),
