@@ -26,6 +26,8 @@ dependencies:
 
   file_picker: ^5.2.5
 
+  pointer_interceptor: ^0.10.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
