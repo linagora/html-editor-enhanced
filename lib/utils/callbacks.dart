@@ -121,12 +121,12 @@ class Callbacks {
   /// the image using [controller.insertNetworkImage] (for uploaded images) or
   /// [controller.insertHtml] (for base64 data) in your callback function,
   /// otherwise nothing will be inserted into the editor!
-  void Function(FileUpload)? onImageUpload;
+  void Function(List<FileUpload>)? onImageUpload;
 
   /// Called whenever an image is failed to be inserted via upload. The function
   /// passes the [FileUpload] class, containing the filename, size, MIME type,
   /// base64 data, and last modified information so you can do error handling.
-  void Function(FileUpload?, String?, UploadError)? onImageUploadError;
+  void Function(List<FileUpload>?, String?, UploadError)? onImageUploadError;
 
   /// Called whenever [InAppWebViewController.onLoadStop] is fired on mobile
   /// or when the [IFrameElement.onLoad] stream is fired on web. Note that this

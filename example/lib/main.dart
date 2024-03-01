@@ -82,13 +82,13 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   onButtonPressed:
                       (ButtonType type, bool? status, Function? updateStatus) {
                     debugPrint(
-                        "button '${describeEnum(type)}' pressed, the current selected status is $status");
+                        "button '${type.name}' pressed, the current selected status is $status");
                     return true;
                   },
                   onDropdownChanged: (DropdownType type, dynamic changed,
                       Function(dynamic)? updateSelectedItem) {
                     debugPrint(
-                        "dropdown '${describeEnum(type)}' changed to $changed");
+                        "dropdown '${type.name}' changed to $changed");
                     return true;
                   },
                   mediaLinkInsertInterceptor:
@@ -127,26 +127,30 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                 }, onInit: () {
                   debugPrint('init');
                 },
-                    //this is commented because it overrides the default Summernote handlers
-                    /*onImageLinkInsert: (String? url) {
-                    debugPrint(url ?? "unknown url");
-                  },
-                  onImageUpload: (FileUpload file) async {
-                    debugPrint(file.name);
-                    debugPrint(file.size);
-                    debugPrint(file.type);
-                    debugPrint(file.base64);
-                  },*/
-                    onImageUploadError: (FileUpload? file, String? base64Str,
-                        UploadError error) {
-                  debugPrint(describeEnum(error));
-                  debugPrint(base64Str ?? '');
-                  if (file != null) {
-                    debugPrint('fileName ${file.name}');
-                    debugPrint('fileName ${file.size}');
-                    debugPrint('fileType ${file.type}');
-                  }
-                }, onKeyDown: (int? keyCode) {
+                //this is commented because it overrides the default Summernote handlers
+                // onImageLinkInsert: (String? url) {
+                //   debugPrint(url ?? "unknown url");
+                // },
+                // onImageUpload: (files) async {
+                //   for (var file in files) {
+                //     debugPrint('fileName = ${file.name}');
+                //     debugPrint('fileSize = ${file.size}');
+                //     debugPrint('fileType = ${file.type}');
+                //     debugPrint('base64 = ${file.base64}');
+                //   }
+                // },
+                // onImageUploadError: (files, base64Str, error) {
+                //   debugPrint(error.name);
+                //   debugPrint(base64Str ?? '');
+                //   if (files != null) {
+                //     for (var file in files) {
+                //       debugPrint('fileName = ${file.name}');
+                //       debugPrint('fileSize = ${file.size}');
+                //       debugPrint('fileType = ${file.type}');
+                //     }
+                //   }
+                // },
+                onKeyDown: (int? keyCode) {
                   debugPrint('$keyCode key downed');
                   debugPrint(
                       'current character count: ${controller.characterCount}');
