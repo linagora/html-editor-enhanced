@@ -454,7 +454,7 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                               "document.onselectionchange = onSelectionChange; console.log('done');");
                       await controller.evaluateJavascript(
                           source:
-                              "document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${describeEnum(widget.htmlEditorOptions.inputType)}');");
+                              "document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${widget.htmlEditorOptions.inputType.name}');");
                       if (context.mounted &&
                           (Theme.of(context).brightness == Brightness.dark ||
                               widget.htmlEditorOptions.darkMode == true) &&
@@ -722,8 +722,10 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
       widget.controller.editorController!.addJavaScriptHandler(
           handlerName: 'onImageUpload',
           callback: (files) {
-            var file = fileUploadFromJson(files.first);
-            c.onImageUpload!.call(file);
+            if (files is List<dynamic>) {
+              final listFileUpload = files.map((fileJson) => fileUploadFromJson(fileJson)).toList();
+              c.onImageUpload!.call(listFileUpload);
+            }
           });
     }
     if (c.onImageUploadError != null) {
@@ -740,15 +742,17 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                           ? UploadError.unsupportedFile
                           : UploadError.exceededMaxSize);
             } else {
-              var file = fileUploadFromJson(args.first.toString());
-              c.onImageUploadError!.call(
-                  file,
-                  null,
-                  args.last.contains('base64')
-                      ? UploadError.jsException
-                      : args.last.contains('unsupported')
+              if (args is List<dynamic>) {
+                final listFileUpload = args.map((fileJson) => fileUploadFromJson(fileJson)).toList();
+                c.onImageUploadError!.call(
+                    listFileUpload,
+                    null,
+                    args.last.contains('base64')
+                        ? UploadError.jsException
+                        : args.last.contains('unsupported')
                           ? UploadError.unsupportedFile
                           : UploadError.exceededMaxSize);
+              }
             }
           });
     }

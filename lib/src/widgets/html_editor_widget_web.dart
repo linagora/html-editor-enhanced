@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
@@ -158,9 +157,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       if (widget.callbacks!.onImageUpload != null) {
         summernoteCallbacks =
             """$summernoteCallbacks          onImageUpload: function(files) {
+            let listFileUploaded = [];
+            let listFileFailed = [];
             var reader = new FileReader();  
             function readFile(index) {
-              if (index >= files.length) return;
+              if (index >= files.length) {
+                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "listFileUploaded": listFileUploaded, "listFileFailed": listFileFailed}), "*");
+                return;
+              }
               let file = files[index];
 
               reader.onload = function (e) {
@@ -173,12 +177,19 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                    'type': file.type,
                    'base64': base64
                 };
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "fileUpload": fileUpload}), "*");
+                listFileUploaded.push(fileUpload);
                 readFile(index+1);
               };
               
               reader.onerror = function (_) {
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "error": "base64"}), "*");
+                let fileUploadError = {
+                   'lastModified': file.lastModified,
+                   'lastModifiedDate': file.lastModifiedDate,
+                   'name': file.name,
+                   'size': file.size,
+                   'type': file.type
+                };
+                listFileFailed.push(fileUploadError);
                 readFile(index+1);
               };
               
@@ -194,6 +205,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 if (typeof file === 'string') {
                   window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "base64": file, "error": error}), "*");
                 } else {
+                  let listFileFailed = [];
                   let fileUploadError = {
                      'lastModified': file.lastModified,
                      'lastModifiedDate': file.lastModifiedDate,
@@ -201,7 +213,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                      'size': file.size,
                      'type': file.type
                   };
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "fileUploadError": fileUploadError, "error": error}), "*");
+                  listFileFailed.push(fileUploadError);
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "listFileFailed": listFileFailed, "error": error}), "*");
                 }
               },
             """;
@@ -272,7 +285,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: htmlHeight", "height": height}), "*");
               }
               if (data["type"].includes("setInputType")) {
-                document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${describeEnum(widget.htmlEditorOptions.inputType)}');
+                document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${widget.htmlEditorOptions.inputType.name}');
               }
               if (data["type"].includes("setDimensionDropZone")) {
                 var styleDropZone = "";
@@ -800,17 +813,21 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           c.onImageLinkInsert!.call(data['url']);
         }
         if (data['type'].contains('onImageUpload')) {
-          final fileUpload = data['fileUpload'];
-          if (fileUpload != null) {
-            final jsonStr = jsonEncode(fileUpload);
-            var file = fileUploadFromJson(jsonStr);
-            c.onImageUpload!.call(file);
-          } else {
+          try {
+            final jsonString = jsonEncode(data['listFileUploaded']);
+            List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
+            final listFileUpload = dataList.map((data) => FileUpload.fromJson(data)).toList();
+            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: COUNT_FILE_UPLOADED: ${listFileUpload.length}');
+            c.onImageUpload!.call(listFileUpload);
+          } catch (e) {
+            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: Exception: $e');
             c.onImageUploadError!.call(null, null, UploadError.jsException);
           }
         }
         if (data['type'].contains('onImageUploadError')) {
           final error = data['error'];
+          final base64 = data['base64'];
+
           UploadError uploadError;
           if (error.contains('base64')) {
             uploadError = UploadError.jsException;
@@ -820,17 +837,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             uploadError = UploadError.exceededMaxSize;
           }
 
-          if (data['base64'] != null) {
-            c.onImageUploadError!.call(null, data['base64'], uploadError);
-          } else {
-            final fileUploadError = data['fileUploadError'];
-            if (fileUploadError != null) {
-              final jsonStr = jsonEncode(fileUploadError);
-              final file = fileUploadFromJson(jsonStr);
-              c.onImageUploadError!.call(file, null, uploadError);
+          try {
+
+            if (base64 != null) {
+              c.onImageUploadError!.call(null, base64, uploadError);
             } else {
-              c.onImageUploadError!.call(null, null, uploadError);
+              final jsonString = jsonEncode(data['listFileFailed']);
+              List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
+              final listFileUploadFailed = dataList.map((data) => FileUpload.fromJson(data)).toList();
+              debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: COUNT_FILE_FAILED: ${listFileUploadFailed.length}');
+              c.onImageUpload!.call(listFileUploadFailed);
             }
+          } catch (e) {
+            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: Exception: $e');
+            c.onImageUploadError!.call(null, null, uploadError);
           }
         }
         if (data['type'].contains('onKeyDown')) {
