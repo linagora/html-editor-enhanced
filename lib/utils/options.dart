@@ -26,6 +26,7 @@ class HtmlEditorOptions {
     this.shouldEnsureVisible = false,
     this.spellCheck = false,
     this.customBodyCssStyle = '',
+    this.disableDragAndDrop = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -128,6 +129,9 @@ class HtmlEditorOptions {
 
   /// Set css for body editor
   final String customBodyCssStyle;
+
+  /// Disable drag and drop
+  final bool disableDragAndDrop;
 }
 
 /// Options that modify the toolbar and its behavior
