@@ -486,6 +486,15 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
+              if (data["type"].includes("onDragDropEvent")) {
+                document.getElementsByClassName('note-editor')[0].addEventListener("dragenter", function(event) {
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter"}), "*");
+                });
+                
+                document.getElementsByClassName('note-editor')[0].addEventListener("dragleave", function(event) {
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave"}), "*");
+                });
+              }
               $userScripts
             }
           }
@@ -877,6 +886,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (data['type'].contains('onTextFontSizeChanged')) {
           c.onTextFontSizeChanged!.call(data['size']);
+        }
+        if (data['type'].contains('onDragEnter') && c.onDragEnter != null) {
+          c.onDragEnter!.call();
+        }
+        if (data['type'].contains('onDragLeave') && c.onDragLeave != null) {
+          c.onDragLeave!.call();
         }
       }
 
