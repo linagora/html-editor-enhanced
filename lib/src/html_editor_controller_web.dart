@@ -400,4 +400,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void updateBodyDirection(String direction) {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: updateBodyDirection', 'direction': direction});
   }
+
+  @override
+  void setOnDragDropEvent() {
+    _evaluateJavascriptWeb(data: {'type': 'toIframe: onDragDropEvent'});
+  }
 }

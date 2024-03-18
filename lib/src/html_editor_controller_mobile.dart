@@ -298,4 +298,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
 
   @override
   void removeSignature() {}
+
+  @override
+  void setOnDragDropEvent() {}
 }
