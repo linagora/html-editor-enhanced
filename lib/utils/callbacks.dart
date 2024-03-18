@@ -26,6 +26,8 @@ class Callbacks {
     this.onPaste,
     this.onScroll,
     this.onTextFontSizeChanged,
+    this.onDragEnter,
+    this.onDragLeave,
   });
 
   /// Called before certain commands are fired and the editor is in rich text view.
@@ -188,4 +190,8 @@ class Callbacks {
 
   /// Called whenever the mouse/finger is released and the editor is in rich text view.
   void Function(int?)? onTextFontSizeChanged;
+
+  void Function()? onDragEnter;
+
+  void Function()? onDragLeave;
 }
