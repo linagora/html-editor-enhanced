@@ -495,6 +495,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 linkTag.href = data["url"];
                 linkTag.target = data["isNewWindow"] ? "_blank" : "_self";
                 linkTag.innerText = data["text"];
+                
+                const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
+                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
               $userScripts
             }
