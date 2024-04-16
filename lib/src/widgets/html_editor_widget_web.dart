@@ -580,7 +580,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "message": "$_summernoteLoadedMessage"}), "*");
         }
         window.addEventListener('load', iframeLoaded, false);
-        window.addEventListener('beforeunload', (event) => {
+        window.addEventListener('pagehide', (event) => {
           window.parent.removeEventListener('message', handleMessage, false);
         });
       </script>
