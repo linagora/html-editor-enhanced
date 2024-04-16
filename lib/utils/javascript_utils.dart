@@ -166,6 +166,10 @@ class JavascriptUtils {
     var activeFontSize = 15;
     var style = document.createElement("style");
     document.body.appendChild(style);
+
+    window.addEventListener('pagehide', (event) => {
+      document.body.removeChild(style);
+    });
     
     function setFontSize(value) {
       \$('#summernote-2').summernote('focus');
