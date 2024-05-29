@@ -639,7 +639,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       child: Column(
         children: <Widget>[
           widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.aboveEditor
-            && widget.htmlToolbarOptions.toolbarType != ToolbarType.hide
               ? ToolbarWidget(
                   key: toolbarKey,
                   controller: widget.controller,
@@ -664,7 +663,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                         }
                       }))),
           widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.belowEditor
-            && widget.htmlToolbarOptions.toolbarType != ToolbarType.hide
               ? ToolbarWidget(
                   key: toolbarKey,
                   controller: widget.controller,
