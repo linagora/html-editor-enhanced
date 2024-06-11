@@ -2,7 +2,6 @@ export 'dart:html';
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,8 +63,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   final _jsonEncoder = const JsonEncoder();
 
-  StreamSubscription<MessageEvent>? _editorJSListener;
-  StreamSubscription<MessageEvent>? _summernoteOnLoadListener;
+  StreamSubscription<html.MessageEvent>? _editorJSListener;
+  StreamSubscription<html.MessageEvent>? _summernoteOnLoadListener;
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
 
   @override
@@ -251,7 +250,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             tabsize: 2,
             height: ${widget.otherOptions.height},
             disableResizeEditor: false,
-            disableDragAndDrop: ${widget.htmlEditorOptions.disableDragAndDrop},
+            disableDragAndDrop: ${widget.htmlEditorOptions.disableDefaultDragAndDropInSummernotePlugin},
             disableGrammar: false,
             spellCheck: ${widget.htmlEditorOptions.spellCheck},
             maximumFileSize: $maximumFileSize,
@@ -266,6 +265,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
        
         window.parent.addEventListener('message', handleMessage, false);
         document.onselectionchange = onSelectionChange;
+        
+        ${JavascriptUtils.jsHandleDragAndDropListenerInHtml(createdViewId, widget.htmlEditorOptions.enableDragAndDropInHtml)}
       
         function handleMessage(e) {
           if (e && e.data && e.data.includes("toIframe:")) {
@@ -485,15 +486,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
-              }
-              if (data["type"].includes("onDragDropEvent")) {
-                document.getElementsByClassName('note-editor')[0].addEventListener("dragenter", function(event) {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter"}), "*");
-                });
-                
-                document.getElementsByClassName('note-editor')[0].addEventListener("dragleave", function(event) {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave"}), "*");
-                });
               }
               $userScripts
             }

@@ -195,7 +195,4 @@ class HtmlEditorController {
 
   /// Update body direction on web
   void updateBodyDirection(String direction) {}
-
-  /// Set drag and drop event listener
-  void setOnDragDropEvent() {}
 }

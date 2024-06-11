@@ -198,4 +198,20 @@ class JavascriptUtils {
       updateTags();
     });
   ''';
+
+  static String jsHandleDragAndDropListenerInHtml(String createdViewId, bool enableDragAnDrop) {
+    if (enableDragAnDrop) {
+      return '''
+        document.addEventListener("dragenter", function(event) {
+          window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter"}), "*");
+        });
+        
+        document.addEventListener("dragleave", function(event) {
+          window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave"}), "*");
+        });
+      ''';
+    } else {
+      return '';
+    }
+  }
 }

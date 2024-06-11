@@ -26,7 +26,8 @@ class HtmlEditorOptions {
     this.shouldEnsureVisible = false,
     this.spellCheck = false,
     this.customBodyCssStyle = '',
-    this.disableDragAndDrop = false,
+    this.disableDefaultDragAndDropInSummernotePlugin = false,
+    this.enableDragAndDropInHtml = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -130,8 +131,11 @@ class HtmlEditorOptions {
   /// Set css for body editor
   final String customBodyCssStyle;
 
-  /// Disable drag and drop
-  final bool disableDragAndDrop;
+  /// Disable drag and drop in summernote plugin
+  final bool disableDefaultDragAndDropInSummernotePlugin;
+
+  /// Enable drag and drop in html document
+  final bool enableDragAndDropInHtml;
 }
 
 /// Options that modify the toolbar and its behavior
