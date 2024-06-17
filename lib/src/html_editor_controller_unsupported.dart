@@ -198,4 +198,7 @@ class HtmlEditorController {
 
   /// Set drag and drop event listener
   void setOnDragDropEvent() {}
+
+  /// Update the link on editor
+  void updateLink(String text, String url, bool isNewWindow, String linkTagId) {}
 }

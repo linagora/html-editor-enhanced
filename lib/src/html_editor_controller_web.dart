@@ -405,4 +405,15 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void setOnDragDropEvent() {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: onDragDropEvent'});
   }
+
+  @override
+  void updateLink(String text, String url, bool isNewWindow, String linkTagId) {
+    _evaluateJavascriptWeb(data: {
+      'type': 'toIframe: updateLink',
+      'text': text,
+      'url': url,
+      'isNewWindow': isNewWindow,
+      'linkTagId': linkTagId
+    });
+  }
 }
