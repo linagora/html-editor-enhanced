@@ -489,11 +489,13 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               }
               if (data["type"].includes("onDragDropEvent")) {
                 document.getElementsByClassName('note-editor')[0].addEventListener("dragenter", function(event) {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter"}), "*");
+                  event.preventDefault();
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter", "types": event.dataTransfer.types}), "*");
                 });
                 
                 document.getElementsByClassName('note-editor')[0].addEventListener("dragleave", function(event) {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave"}), "*");
+                  event.preventDefault();
+                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave", "types": event.dataTransfer.types}), "*");
                 });
               }
               $userScripts
@@ -892,10 +894,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           c.onTextFontSizeChanged!.call(data['size']);
         }
         if (data['type'].contains('onDragEnter') && c.onDragEnter != null) {
-          c.onDragEnter!.call();
+          c.onDragEnter!.call(data['types']);
         }
         if (data['type'].contains('onDragLeave') && c.onDragLeave != null) {
-          c.onDragLeave!.call();
+          c.onDragLeave!.call(data['types']);
         }
       }
 

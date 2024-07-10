@@ -191,7 +191,7 @@ class Callbacks {
   /// Called whenever the mouse/finger is released and the editor is in rich text view.
   void Function(int?)? onTextFontSizeChanged;
 
-  void Function()? onDragEnter;
+  void Function(List<dynamic>? types)? onDragEnter;
 
-  void Function()? onDragLeave;
+  void Function(List<dynamic>? types)? onDragLeave;
 }
