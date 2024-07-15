@@ -76,6 +76,11 @@ class JavascriptUtils {
         }
       }
     }
+    var browserName = getBrowserName();
+    var signatureButton = document.querySelector('.tmail-signature-button');
+    if (browserName === 'Firefox' && signatureButton) {
+      signatureButton.style.userSelect = 'none';
+    }
   ''';
 
   static const String jsHandleRemoveSignature = '''
