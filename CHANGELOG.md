@@ -1,3 +1,6 @@
+## [3.1.0] - 2024-08-06
+- Release new version `v3.1.0`
+
 ## [2.5.1] = 2023-01-25
 * Fix build issues on Flutter 3.4.0+ due to assets directory
 * Update dependencies
