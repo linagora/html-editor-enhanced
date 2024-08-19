@@ -125,26 +125,21 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   debugPrint('codeview either focused or unfocused');
                 }, onInit: () {
                   debugPrint('init');
-                // },
+                },
                     //this is commented because it overrides the default Summernote handlers
-                    /*onImageLinkInsert: (String? url) {
-                    debugPrint(url ?? "unknown url");
-                  },
-                  onImageUpload: (FileUpload file) async {
-                    debugPrint(file.name);
-                    debugPrint(file.size);
-                    debugPrint(file.type);
-                    debugPrint(file.base64);
-                  },*/
-                  //   onImageUploadError: (FileUpload? file, String? base64Str,
-                  //       UploadError error) {
-                  // debugPrint(describeEnum(error));
-                  // debugPrint(base64Str ?? '');
-                  // if (file != null) {
-                  //   debugPrint(file.name);
-                  //   debugPrint(file.size);
-                  //   debugPrint(file.type);
-                  // }
+                    // onImageLinkInsert: (String? url) {
+                    //   debugPrint(url ?? "unknown url");
+                    // },
+                onImageUpload: (files) async {
+                  for (var i = 0; i < files.length; i++ ) {
+                    debugPrint('onImageUpload::INDEX = $i | ${files[i].name}');
+                    debugPrint('onImageUpload::${files[i].size}');
+                    debugPrint('onImageUpload::${files[i].type}');
+                    debugPrint('onImageUpload::${files[i].base64}');
+                  }
+                },
+                onImageUploadError: (files, base64Str, error) {
+                  debugPrint('onImageUploadError:: $error');
                 }, onKeyDown: (int? keyCode) {
                   debugPrint('$keyCode key downed');
                   debugPrint(
