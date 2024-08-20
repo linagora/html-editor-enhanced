@@ -1,3 +1,6 @@
+## [3.1.1] - 2024-08-20
+* Support `Copy & Paste` multiple images 
+
 ## [3.1.0] - 2024-08-06
 - Release new version `v3.1.0`
 
