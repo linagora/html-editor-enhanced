@@ -911,6 +911,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (widget.htmlEditorOptions.initialText != null) {
           widget.controller.setText(widget.htmlEditorOptions.initialText!);
+          widget.callbacks?.onInitialTextLoadComplete?.call(
+            widget.htmlEditorOptions.initialText!);
         }
         var data = <String, Object>{'type': 'toIframe: getHeight'};
         data['view'] = createdViewId;
