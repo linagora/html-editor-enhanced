@@ -28,6 +28,7 @@ class Callbacks {
     this.onTextFontSizeChanged,
     this.onDragEnter,
     this.onDragLeave,
+    this.onInitialTextLoadComplete,
   });
 
   /// Called before certain commands are fired and the editor is in rich text view.
@@ -194,4 +195,6 @@ class Callbacks {
   void Function(List<dynamic>? types)? onDragEnter;
 
   void Function(List<dynamic>? types)? onDragLeave;
+
+  void Function(String initialText)? onInitialTextLoadComplete;
 }
