@@ -131,9 +131,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   /// Updates the toolbar from the JS handler on mobile and the onMessage
   /// listener on web
   void updateToolbar(Map<String, dynamic> json) {
-    if (kDebugMode) {
-      print('ToolbarWidget::updateToolbar::json: $json');
-    }
+    debugPrint('ToolbarWidget::updateToolbar::json: $json');
     //get parent element
     String parentElem = json['style'] ?? '';
     //get font name
@@ -177,9 +175,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
         _fontNameSelectedItem = 'sans-serif';
       });
     }
-    if (kDebugMode) {
-      print('ToolbarWidget::updateToolbar::colorList: $colorList');
-    }
+    debugPrint('ToolbarWidget::updateToolbar::colorList: $colorList');
     //update the fore/back selected color if necessary
     final foregroundColor = colorList[0];
     if (foregroundColor != null && foregroundColor.isNotEmpty) {
@@ -351,29 +347,26 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
         }
       }
     });
-    if (widget.callbacks?.onChangeSelection != null) {
-      widget.callbacks!.onChangeSelection!.call(EditorSettings(
-          parentElement: parentElem,
-          fontName: fontName,
-          fontSize: fontSize,
-          isBold: fontList[0] ?? false,
-          isItalic: fontList[1] ?? false,
-          isUnderline: fontList[2] ?? false,
-          isStrikethrough: miscFontList[0] ?? false,
-          isSuperscript: miscFontList[1] ?? false,
-          isSubscript: miscFontList[2] ?? false,
-          foregroundColor: _foreColorSelected,
-          backgroundColor: _backColorSelected,
-          isUl: paragraphList[0] ?? false,
-          isOl: paragraphList[1] ?? false,
-          isAlignLeft: alignList[0] ?? false,
-          isAlignCenter: alignList[1] ?? false,
-          isAlignRight: alignList[2] ?? false,
-          isAlignJustify: alignList[3] ?? false,
-          lineHeight: _lineHeightSelectedItem,
-          textDirection:
-              textDir == 'rtl' ? TextDirection.rtl : TextDirection.ltr));
-    }
+    widget.callbacks?.onChangeSelection?.call(EditorSettings(
+      parentElement: parentElem,
+      fontName: fontName,
+      fontSize: fontSize,
+      isBold: fontList[0] ?? false,
+      isItalic: fontList[1] ?? false,
+      isUnderline: fontList[2] ?? false,
+      isStrikethrough: miscFontList[0] ?? false,
+      isSuperscript: miscFontList[1] ?? false,
+      isSubscript: miscFontList[2] ?? false,
+      foregroundColor: _foreColorSelected,
+      backgroundColor: _backColorSelected,
+      isUl: paragraphList[0] ?? false,
+      isOl: paragraphList[1] ?? false,
+      isAlignLeft: alignList[0] ?? false,
+      isAlignCenter: alignList[1] ?? false,
+      isAlignRight: alignList[2] ?? false,
+      isAlignJustify: alignList[3] ?? false,
+      lineHeight: _lineHeightSelectedItem,
+      textDirection: textDir == 'rtl' ? TextDirection.rtl : TextDirection.ltr));
   }
 
   @override

@@ -2,11 +2,14 @@ export 'dart:html';
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html_editor_enhanced/src/model/default_transfer_method.dart';
+import 'package:html_editor_enhanced/src/model/event_data_properties.dart';
+import 'package:html_editor_enhanced/src/model/transfer_event_data.dart';
+import 'package:html_editor_enhanced/src/model/transfer_type.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 
@@ -64,10 +67,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   final _jsonEncoder = const JsonEncoder();
 
-  StreamSubscription<MessageEvent>? _editorJSListener;
-  StreamSubscription<MessageEvent>? _summernoteOnLoadListener;
-  static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
-  final _focusNode = FocusNode();
+  StreamSubscription<html.MessageEvent>? _onWindowMessageStreamSubscription;
 
   @override
   void initState() {
@@ -114,7 +114,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             if (!allowedKeys && \$(e.target).text().length >= ${widget.htmlEditorOptions.characterLimit}) {
                 e.preventDefault();
             }''' : ''}
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: characterCount", "totalChars": totalChars}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.characterCount.name}",
+              "${EventDataProperties.data.name}": totalChars
+            }), "*");
         },
     ''';
     var maximumFileSize = 10485760;
@@ -130,97 +135,119 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 });
               },
               onSelect: (value) => {
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onSelectMention", "value": value}), "*");
+                window.parent.postMessage(JSON.stringify({
+                  "${EventDataProperties.id.name}": "$createdViewId",
+                  "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                  "${EventDataProperties.method.name}": "${DefaultTransferMethod.onSelectMention.name}",
+                  "${EventDataProperties.data.name}": value
+                }), "*");
               },
             },
           ''';
-        if (p.onSelect != null) {
-          html.window.onMessage.listen((event) {
-            var data = json.decode(event.data);
-            if (data['type'] != null &&
-                data['type'].contains('toDart:') &&
-                data['view'] == createdViewId &&
-                data['type'].contains('onSelectMention')) {
-              p.onSelect!.call(data['value']);
-            }
-          });
-        }
       }
     }
-    if (widget.callbacks != null) {
-      if (widget.callbacks!.onImageLinkInsert != null) {
-        summernoteCallbacks =
-            '''$summernoteCallbacks          onImageLinkInsert: function(url) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageLinkInsert", "url": url}), "*");
-          },
-        ''';
-      }
-      if (widget.callbacks!.onImageUpload != null) {
-        summernoteCallbacks =
-            """$summernoteCallbacks          onImageUpload: function(files) {
-            let listFileUploaded = [];
-            let listFileFailed = [];
-            var reader = new FileReader();  
-            function readFile(index) {
-              if (index >= files.length) {
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUpload", "listFileUploaded": listFileUploaded, "listFileFailed": listFileFailed}), "*");
-                return;
-              }
-              let file = files[index];
-
-              reader.onload = function (e) {
-                let base64 = e.target.result;
-                let fileUpload = {
-                   'lastModified': file.lastModified,
-                   'lastModifiedDate': file.lastModifiedDate,
-                   'name': file.name,
-                   'size': file.size,
-                   'type': file.type,
-                   'base64': base64
-                };
-                listFileUploaded.push(fileUpload);
-                readFile(index+1);
-              };
-              
-              reader.onerror = function (_) {
-                let fileUploadError = {
-                   'lastModified': file.lastModified,
-                   'lastModifiedDate': file.lastModifiedDate,
-                   'name': file.name,
-                   'size': file.size,
-                   'type': file.type
-                };
-                listFileFailed.push(fileUploadError);
-                readFile(index+1);
-              };
-              
-              reader.readAsDataURL(file);
+    if (widget.callbacks?.onImageLinkInsert != null) {
+      summernoteCallbacks =
+          '''$summernoteCallbacks          onImageLinkInsert: function(url) {
+          window.parent.postMessage(JSON.stringify({
+            "${EventDataProperties.id.name}": "$createdViewId",
+            "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+            "${EventDataProperties.method.name}": "${DefaultTransferMethod.onImageLinkInsert.name}",
+            "${EventDataProperties.data.name}": url
+          }), "*");
+        },
+      ''';
+    }
+    if (widget.callbacks?.onImageUpload != null) {
+      summernoteCallbacks =
+          """$summernoteCallbacks          onImageUpload: function(files) {
+          let listFileUploaded = [];
+          let listFileFailed = [];
+          var reader = new FileReader();  
+          function readFile(index) {
+            if (index >= files.length) {
+              window.parent.postMessage(JSON.stringify({
+                "id": "$createdViewId",
+                "type": "${TransferType.toDart.name}",
+                "method": "${DefaultTransferMethod.onImageUpload.name}",
+                "data": {
+                  "listFileUploaded": listFileUploaded,
+                  "listFileFailed": listFileFailed
+                }
+              }), "*");
+              return;
             }
-            readFile(0);
-          },
-        """;
-      }
-      if (widget.callbacks!.onImageUploadError != null) {
+            let file = files[index];
+
+            reader.onload = function (e) {
+              let base64 = e.target.result;
+              let fileUpload = {
+                 'lastModified': file.lastModified,
+                 'lastModifiedDate': file.lastModifiedDate,
+                 'name': file.name,
+                 'size': file.size,
+                 'type': file.type,
+                 'base64': base64
+              };
+              listFileUploaded.push(fileUpload);
+              readFile(index+1);
+            };
+            
+            reader.onerror = function (_) {
+              let fileUploadError = {
+                 'lastModified': file.lastModified,
+                 'lastModifiedDate': file.lastModifiedDate,
+                 'name': file.name,
+                 'size': file.size,
+                 'type': file.type
+              };
+              listFileFailed.push(fileUploadError);
+              readFile(index+1);
+            };
+            
+            reader.readAsDataURL(file);
+          }
+          readFile(0);
+        },
+      """;
+    }
+    if (widget.callbacks?.onImageUploadError != null) {
         summernoteCallbacks =
             """$summernoteCallbacks              onImageUploadError: function(file, error) {
-                if (typeof file === 'string') {
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "base64": file, "error": error}), "*");
-                } else {
-                  let listFileFailed = [];
-                  let fileUploadError = {
-                     'lastModified': file.lastModified,
-                     'lastModifiedDate': file.lastModifiedDate,
-                     'name': file.name,
-                     'size': file.size,
-                     'type': file.type
-                  };
-                  listFileFailed.push(fileUploadError);
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onImageUploadError", "listFileFailed": listFileFailed, "error": error}), "*");
-                }
+                // if (typeof file === 'string') {
+                //   window.parent.postMessage(JSON.stringify({
+                //     "${EventDataProperties.id.name}": "$createdViewId",
+                //     "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                //     "${EventDataProperties.method.name}": "${DefaultTransferMethod.onImageUploadError.name}",
+                //     "${EventDataProperties.data.name}": {
+                //       "base64": file,
+                //       "error": error
+                //     }
+                //   }), "*");
+                // } else {
+                //   let listFileFailed = [];
+                //   let fileUploadError = {
+                //      'lastModified': file.lastModified,
+                //      'lastModifiedDate': file.lastModifiedDate,
+                //      'name': file.name,
+                //      'size': file.size,
+                //      'type': file.type
+                //   };
+                //   listFileFailed.push(fileUploadError);
+                //   window.parent.(JSON.stringify({
+                //     "${EventDataProperties.id.name}": "$createdViewId",
+                //     "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                //     "${EventDataProperties.method.name}": "${DefaultTransferMethod.onImageUploadError.name}",
+                //     "${EventDataProperties.data.name}": {
+                //       "listFileFailed": listFileFailed,
+                //       "error": error
+                //     }
+                //   }), "*");
+                // }
               },
             """;
       }
-    }
+
     summernoteCallbacks = '$summernoteCallbacks}';
     var darkCSS = '';
     if ((Theme.of(widget.initBC).brightness == Brightness.dark ||
@@ -237,7 +264,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     if (widget.htmlEditorOptions.webInitialScripts != null) {
       for (var element in widget.htmlEditorOptions.webInitialScripts!) {
         userScripts = '''$userScripts
-          if (data["type"].includes("${element.name}")) {
+          if (transferMethod == "${element.name}") {
             ${element.script}
           }
           \n
@@ -261,7 +288,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           });
           
           \$('#summernote-2').on('summernote.change', function(_, contents, \$editable) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contents}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onChangeContent.name}",
+              "${EventDataProperties.data.name}": contents
+            }), "*");
           });
         });
        
@@ -269,237 +301,357 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         document.onselectionchange = onSelectionChange;
       
         function handleMessage(e) {
-          if (e && e.data && e.data.includes("toIframe:")) {
-            var data = JSON.parse(e.data);
-            if (data["view"].includes("$createdViewId")) {
-              if (data["type"].includes("getText")) {
-                var str = \$('#summernote-2').summernote('code');
-                window.parent.postMessage(JSON.stringify({"type": "toDart: getText", "text": str}), "*");
-              }
-              if (data["type"].includes("getTextWithSignatureContent")) {
-                ${JavascriptUtils.jsHandleReplaceSignatureContent}
-                
-                var str = \$('#summernote-2').summernote('code');
-                window.parent.postMessage(JSON.stringify({"type": "toDart: getTextWithSignatureContent", "text": str}), "*");
-              }
-              if (data["type"].includes("getHeight")) {
-                var height = document.body.scrollHeight;
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: htmlHeight", "height": height}), "*");
-              }
-              if (data["type"].includes("setInputType")) {
-                document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${widget.htmlEditorOptions.inputType.name}');
-              }
-              if (data["type"].includes("setDimensionDropZone")) {
-                var styleDropZone = "";
-                if (data["height"]) {
-                  styleDropZone = "height:" + data["height"] + "px;";
-                }
-                if (data["width"]) {
-                  styleDropZone = styleDropZone + "width:" + data["width"] + "px;";
-                }
-                const nodeDropZone = document.querySelector('.note-editor > .note-dropzone');
-                if (nodeDropZone) {
-                  nodeDropZone.setAttribute('style', styleDropZone);
-                }
-              }
-              if (data["type"].includes("setText")) {
-                \$('#summernote-2').summernote('code', data["text"]);
-              }
-              if (data["type"].includes("setFullScreen")) {
-                \$("#summernote-2").summernote("fullscreen.toggle");
-              }
-              if (data["type"].includes("isFullScreen")) {
-                var changed = \$('#summernote-2').summernote('fullscreen.isFullscreen');
-                window.parent.postMessage(JSON.stringify({"type": "toDart: isFullScreen", "value": changed}), "*");
-              }
-              if (data["type"].includes("setFocus")) {
-                \$('#summernote-2').summernote('focus');
-              }
-              if (data["type"].includes("clear")) {
-                \$('#summernote-2').summernote('reset');
-              }
-              if (data["type"].includes("setHint")) {
-                \$(".note-placeholder").html(data["text"]);
-              }
-              if (data["type"].includes("toggleCodeview")) {
-                \$('#summernote-2').summernote('codeview.toggle');
-              }
-              if (data["type"].includes("isActivatedCodeView")) {
-                var changed = \$('#summernote-2').summernote('codeview.isActivated');
-                window.parent.postMessage(JSON.stringify({"type": "toDart: isActivatedCodeView", "value": changed}), "*");
-              }
-              if (data["type"].includes("disable")) {
-                \$('#summernote-2').summernote('disable');
-              }
-              if (data["type"].includes("enable")) {
-                \$('#summernote-2').summernote('enable');
-              }
-              if (data["type"].includes("undo")) {
-                \$('#summernote-2').summernote('undo');
-              }
-              if (data["type"].includes("redo")) {
-                \$('#summernote-2').summernote('redo');
-              }
-              if (data["type"].includes("insertText")) {
-                \$('#summernote-2').summernote('insertText', data["text"]);
-              }
-              if (data["type"].includes("insertHtml")) {
-                \$('#summernote-2').summernote('pasteHTML', data["html"]);
-              }
-              if (data["type"].includes("insertNetworkImage")) {
-                \$('#summernote-2').summernote('insertImage', data["url"], data["filename"]);
-              }
-              if (data["type"].includes("insertLink")) {
-                \$('#summernote-2').summernote('createLink', {
-                  text: data["text"],
-                  url: data["url"],
-                  isNewWindow: data["isNewWindow"]
-                });
-              }
-              if (data["type"].includes("reload")) {
-                window.location.reload();
-              }
-              if (data["type"].includes("addNotification")) {
-                if (data["alertType"] === null) {
-                  \$('.note-status-output').html(
-                    data["html"]
-                  );
-                } else {
-                  \$('.note-status-output').html(
-                    '<div class="' + data["alertType"] + '">' +
-                      data["html"] +
-                    '</div>'
-                  );
-                }
-              }
-              if (data["type"].includes("removeNotification")) {
-                \$('.note-status-output').empty();
-              }
-              if (data["type"].includes("execCommand")) {
-                var commandType = data["command"];
-                if (commandType === "hiliteColor") {
-                  if (data["argument"] === null) {
-                    if (!document.execCommand("hiliteColor", false)) {
-                      document.execCommand("backColor", false);
-                    }
-                  } else {
-                    if (!document.execCommand("hiliteColor", false, data["argument"])) {
-                      document.execCommand("backColor", false, data["argument"]);
-                    }
-                  }
-                } else {
-                  if (data["argument"] === null) {
-                    document.execCommand(commandType, false);
-                  } else {
-                    document.execCommand(commandType, false, data["argument"]);
-                  }
-                }
-              }
-              if (data["type"].includes("execSummernoteAPI")) {
-                var nameAPI = data["nameAPI"];
-                var value = data["value"];
-                if (value === null) {
-                  \$('#summernote-2').summernote(nameAPI);
-                } else {
-                  \$('#summernote-2').summernote(nameAPI, value);
-                }
-              }
-              if (data["type"].includes("setFontSize")) {
-                setFontSize(data["size"]);
-              }
-              if (data["type"].includes("changeListStyle")) {
-                var \$focusNode = \$(window.getSelection().focusNode);
-                var \$parentList = \$focusNode.closest("div.note-editable ol, div.note-editable ul");
-                \$parentList.css("list-style-type", data["changed"]);
-              }
-              if (data["type"].includes("changeLineHeight")) {
-                \$('#summernote-2').summernote('lineHeight', data["changed"]);
-              }
-              if (data["type"].includes("changeTextDirection")) {
-                var s=document.getSelection();			
-                if(s==''){
-                    document.execCommand("insertHTML", false, "<p dir='"+data['direction']+"'></p>");
-                }else{
-                    document.execCommand("insertHTML", false, "<div dir='"+data['direction']+"'>"+ document.getSelection()+"</div>");
-                }
-              }
-              if (data["type"].includes("changeCase")) {
-                var selected = \$('#summernote-2').summernote('createRange');
-                  if(selected.toString()){
-                      var texto;
-                      var count = 0;
-                      var value = data["case"];
-                      var nodes = selected.nodes();
-                      for (var i=0; i< nodes.length; ++i) {
-                          if (nodes[i].nodeName == "#text") {
-                              count++;
-                              texto = nodes[i].nodeValue.toLowerCase();
-                              nodes[i].nodeValue = texto;
-                              if (value == 'upper') {
-                                 nodes[i].nodeValue = texto.toUpperCase();
-                              }
-                              else if (value == 'sentence' && count==1) {
-                                 nodes[i].nodeValue = texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
-                              } else if (value == 'title') {
-                                var sentence = texto.split(" ");
-                                for(var j = 0; j< sentence.length; j++){
-                                   sentence[j] = sentence[j][0].toUpperCase() + sentence[j].slice(1);
-                                }
-                                nodes[i].nodeValue = sentence.join(" ");
-                              }
-                          }
-                      }
-                  }
-              }
-              if (data["type"].includes("insertTable")) {
-                \$('#summernote-2').summernote('insertTable', data["dimensions"]);
-              }
-              if (data["type"].includes("getSelectedTextHtml")) {
-                var range = window.getSelection().getRangeAt(0);
-                var content = range.cloneContents();
-                var span = document.createElement('span');
-                  
-                span.appendChild(content);
-                var htmlContent = span.innerHTML;
-                
-                window.parent.postMessage(JSON.stringify({"type": "toDart: getSelectedText", "text": htmlContent}), "*");
-              } else if (data["type"].includes("getSelectedText")) {
-                window.parent.postMessage(JSON.stringify({"type": "toDart: getSelectedText", "text": window.getSelection().toString()}), "*");
-              }
-              
-              if (data["type"].includes("insertSignature")) {
-                ${JavascriptUtils.jsHandleInsertSignature}
-               
-                const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
-              }
-              
-              if (data["type"].includes("removeSignature")) {
-                ${JavascriptUtils.jsHandleRemoveSignature}
+          if (!e?.data) {
+            console.warn("handleMessage::Received null data in message.");
+            return;
+          }
+        
+          let data;
+          try {
+              data = JSON.parse(e.data);
+          } catch (error) {
+              console.error("handleMessage::Failed to parse message data:", error);
+              return;
+          }
+          
+          const eventId = data["${EventDataProperties.id.name}"];
+          const transferType = data["${EventDataProperties.type.name}"];
 
-                const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
-              }
-              
-              if (data["type"].includes("updateBodyDirection")) {
-                ${JavascriptUtils.jsHandleUpdateBodyDirection}
-
-                const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
-              }
-              if (data["type"].includes("onDragDropEvent")) {
-                document.getElementsByClassName('note-editor')[0].addEventListener("dragenter", function(event) {
-                  event.preventDefault();
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter", "types": event.dataTransfer.types}), "*");
-                });
-                
-                document.getElementsByClassName('note-editor')[0].addEventListener("dragleave", function(event) {
-                  event.preventDefault();
-                  window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave", "types": event.dataTransfer.types}), "*");
-                });
-              }
-              $userScripts
+          if (eventId == "$createdViewId" && transferType == "${TransferType.toIframe.name}") {
+            const transferMethod = data["${EventDataProperties.method.name}"];
+            
+            if (!transferMethod) {
+              console.warn("handleMessage::Transfer method is null in message.");
+              return;
             }
+            const eventData = data["${EventDataProperties.data.name}"];
+            
+            if (transferMethod == "${DefaultTransferMethod.getText.name}") {
+              var str = \$('#summernote-2').summernote('code');
+                
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.getText.name}",
+                "${EventDataProperties.data.name}": str
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.getTextWithSignatureContent.name}") {
+              ${JavascriptUtils.jsHandleReplaceSignatureContent}
+              
+              var str = \$('#summernote-2').summernote('code');
+              
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.getTextWithSignatureContent.name}",
+                "${EventDataProperties.data.name}": str
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.getHeight.name}") {
+              var height = document.body.scrollHeight;
+                
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.getHeight.name}",
+                "${EventDataProperties.data.name}": height
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setInputType.name}") {
+              document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${widget.htmlEditorOptions.inputType.name}');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setDimensionDropZone.name}") {
+              const nodeDropZone = document.querySelector('.note-editor > .note-dropzone');
+              if (nodeDropZone) {
+                var styleDropZone = "";
+                
+                if (eventData && eventData["height"]) {
+                  styleDropZone = "height:" + eventData["height"] + "px;";
+                }
+                if (eventData && eventData["width"]) {
+                  styleDropZone = styleDropZone + "width:" + eventData["width"] + "px;";
+                }
+                nodeDropZone.setAttribute('style', styleDropZone);
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setText.name}") {
+              \$('#summernote-2').summernote('code', eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setFullScreen.name}") {
+              \$("#summernote-2").summernote("fullscreen.toggle");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.isFullScreen.name}") {
+              var changed = \$('#summernote-2').summernote('fullscreen.isFullscreen');
+                
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.isFullScreen.name}",
+                "${EventDataProperties.data.name}": changed
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setFocus.name}") {
+              \$('#summernote-2').summernote('focus');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.clear.name}") {
+              \$('#summernote-2').summernote('reset');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setHint.name}") {
+              \$(".note-placeholder").html(eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.toggleCodeView.name}") {
+              \$('#summernote-2').summernote('codeview.toggle');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.isActivatedCodeView.name}") {
+              var changed = \$('#summernote-2').summernote('codeview.isActivated');
+                
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.isActivatedCodeView.name}",
+                "${EventDataProperties.data.name}": changed
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.disable.name}") {
+              \$('#summernote-2').summernote('disable');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.enable.name}") {
+              \$('#summernote-2').summernote('enable');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.undo.name}") {
+              \$('#summernote-2').summernote('undo');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.redo.name}") {
+              \$('#summernote-2').summernote('redo');
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.insertText.name}") {
+              \$('#summernote-2').summernote('insertText', eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.insertHtml.name}") {
+              \$('#summernote-2').summernote('pasteHTML', eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.insertNetworkImage.name}") {
+              \$('#summernote-2').summernote('insertImage', eventData["url"], eventData["filename"]);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.insertLink.name}") {
+              \$('#summernote-2').summernote('createLink', {
+                text: eventData["text"],
+                url: eventData["url"],
+                isNewWindow: eventData["isNewWindow"]
+              });
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.reload.name}") {
+              window.location.reload();
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.addNotification.name}") {
+              if (eventData["alertType"] === null) {
+                \$('.note-status-output').html(
+                  eventData["html"]
+                );
+              } else {
+                \$('.note-status-output').html(
+                  '<div class="' + eventData["alertType"] + '">' +
+                    eventData["html"] +
+                  '</div>'
+                );
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.removeNotification.name}") {
+              \$('.note-status-output').empty();
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.execCommand.name}") {
+              var commandType = eventData["command"];
+              var argument = eventData["argument"];
+              
+              if (commandType === "hiliteColor") {
+                if (argument === null && !document.execCommand("hiliteColor", false)) {
+                  document.execCommand("backColor", false);
+                } else if (argument && !document.execCommand("hiliteColor", false, argument)) {
+                  document.execCommand("backColor", false, argument);
+                }
+              } else {
+                if (argument === null) {
+                  document.execCommand(commandType, false);
+                } else {
+                  document.execCommand(commandType, false, argument);
+                }
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.execSummernoteAPI.name}") {
+              var nameAPI = eventData["nameAPI"];
+              var value = eventData["value"];
+              if (value === null) {
+                \$('#summernote-2').summernote(nameAPI);
+              } else {
+                \$('#summernote-2').summernote(nameAPI, value);
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.setFontSize.name}") {
+              setFontSize(eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.changeListStyle.name}") {
+              var \$focusNode = \$(window.getSelection().focusNode);
+              var \$parentList = \$focusNode.closest("div.note-editable ol, div.note-editable ul");
+              \$parentList.css("list-style-type", eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.changeLineHeight.name}") {
+              \$('#summernote-2').summernote('lineHeight', eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.changeTextDirection.name}") {
+              var s = document.getSelection();			
+              if (s == '') {
+                document.execCommand("insertHTML", false, "<p dir='"+ eventData +"'></p>");
+              } else {
+                document.execCommand("insertHTML", false, "<div dir='"+ eventData +"'>"+ document.getSelection()+"</div>");
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.changeCase.name}") {
+              var selected = \$('#summernote-2').summernote('createRange');
+              if (selected.toString()) {
+                var texto;
+                var count = 0;
+                var value = eventData;
+                var nodes = selected.nodes();
+                for (var i=0; i< nodes.length; ++i) {
+                  if (nodes[i].nodeName == "#text") {
+                    count++;
+                    texto = nodes[i].nodeValue.toLowerCase();
+                    nodes[i].nodeValue = texto;
+                    if (value == 'upper') {
+                       nodes[i].nodeValue = texto.toUpperCase();
+                    } else if (value == 'sentence' && count==1) {
+                       nodes[i].nodeValue = texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+                    } else if (value == 'title') {
+                      var sentence = texto.split(" ");
+                      for(var j = 0; j< sentence.length; j++){
+                         sentence[j] = sentence[j][0].toUpperCase() + sentence[j].slice(1);
+                      }
+                      nodes[i].nodeValue = sentence.join(" ");
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.getText.name}") {
+              \$('#summernote-2').summernote('insertTable', eventData);
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.getSelectedTextHtml.name}") {
+              var range = window.getSelection().getRangeAt(0);
+              var content = range.cloneContents();
+              var span = document.createElement('span');
+                
+              span.appendChild(content);
+              var htmlContent = span.innerHTML;
+              
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.getSelectedTextHtml.name}",
+                "${EventDataProperties.data.name}": htmlContent
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.getSelectedText.name}") {
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.getSelectedText.name}",
+                "${EventDataProperties.data.name}": window.getSelection().toString()
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.insertSignature.name}") {
+              ${JavascriptUtils.jsHandleInsertSignature}
+               
+              const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.insertSignature.name}",
+                "${EventDataProperties.data.name}": contentsEditor
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.removeSignature.name}") {
+              ${JavascriptUtils.jsHandleRemoveSignature}
+
+              const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.removeSignature.name}",
+                "${EventDataProperties.data.name}": contentsEditor
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.updateBodyDirection.name}") {
+              ${JavascriptUtils.jsHandleUpdateBodyDirection}
+
+              const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
+              window.parent.postMessage(JSON.stringify({
+                "${EventDataProperties.id.name}": "$createdViewId",
+                "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                "${EventDataProperties.method.name}": "${DefaultTransferMethod.updateBodyDirection.name}",
+                "${EventDataProperties.data.name}": contentsEditor
+              }), "*");
+            }
+            
+            if (transferMethod == "${DefaultTransferMethod.onDragDropEvent.name}") {
+              document.getElementsByClassName('note-editor')[0].addEventListener("dragenter", function(event) {
+                event.preventDefault();
+                window.parent.postMessage(JSON.stringify({
+                  "${EventDataProperties.id.name}": "$createdViewId",
+                  "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                  "${EventDataProperties.method.name}": "${DefaultTransferMethod.onDragEnter.name}",
+                  "${EventDataProperties.data.name}": event.dataTransfer.types
+                }), "*");
+              });
+              
+              document.getElementsByClassName('note-editor')[0].addEventListener("dragleave", function(event) {
+                event.preventDefault();
+                window.parent.postMessage(JSON.stringify({
+                  "${EventDataProperties.id.name}": "$createdViewId",
+                  "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                  "${EventDataProperties.method.name}": "${DefaultTransferMethod.onDragLeave.name}",
+                  "${EventDataProperties.data.name}": event.dataTransfer.types
+                }), "*");
+              });
+            }
+                        
+            $userScripts
           }
         }
         
@@ -560,19 +712,22 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             backColor = \$(focusNode.parentNode).css('background-color');
           }
           var message = {
-            'view': "$createdViewId", 
-            'type': "toDart: updateToolbar",
-            'style': parent,
-            'fontName': fontName,
-            'fontSize': fontSize,
-            'font': [isBold, isItalic, isUnderline],
-            'miscFont': [isStrikethrough, isSuperscript, isSubscript],
-            'color': [foreColor, backColor],
-            'paragraph': [isUL, isOL],
-            'listStyle': parentListType,
-            'align': [isLeft, isCenter, isRight, isFull],
-            'lineHeight': lineHeight,
-            'direction': direction,
+            '${EventDataProperties.id.name}': "$createdViewId", 
+            '${EventDataProperties.type.name}': "${TransferType.toDart.name}",
+            '${EventDataProperties.method.name}': "${DefaultTransferMethod.updateToolbar.name}",
+            '${EventDataProperties.data.name}': {
+              'style': parent,
+              'fontName': fontName,
+              'fontSize': fontSize,
+              'font': [isBold, isItalic, isUnderline],
+              'miscFont': [isStrikethrough, isSuperscript, isSubscript],
+              'color': [foreColor, backColor],
+              'paragraph': [isUL, isOL],
+              'listStyle': parentListType,
+              'align': [isLeft, isCenter, isRight, isFull],
+              'lineHeight': lineHeight,
+              'direction': direction
+            }
           };
           window.parent.postMessage(JSON.stringify(message), "*");
         }
@@ -580,7 +735,11 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         $jsCallbacks
 
         function iframeLoaded(event) {
-          window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "message": "$_summernoteLoadedMessage"}), "*");
+          window.parent.postMessage(JSON.stringify({
+            "${EventDataProperties.id.name}": "$createdViewId",
+            "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+            "${EventDataProperties.method.name}": "${DefaultTransferMethod.onIframeLoaded.name}"
+          }), "*");
         }
         window.addEventListener('load', iframeLoaded, false);
         window.addEventListener('pagehide', (event) => {
@@ -606,7 +765,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             '"assets/packages/html_editor_enhanced/assets/summernote-lite.min.css"')
         .replaceFirst('"summernote-lite.min.js"',
             '"assets/packages/html_editor_enhanced/assets/summernote-lite-v2.min.js"');
-    if (widget.callbacks != null) addJSListener(widget.callbacks!);
+    _addWindowListener();
 
     final currentContextBC = widget.initBC;
     String maxWidth;
@@ -635,7 +794,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final child = SizedBox(
+    return SizedBox(
       height: widget.htmlEditorOptions.autoAdjustHeight
           ? actualHeight
           : widget.otherOptions.height,
@@ -675,10 +834,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ],
       ),
     );
-
-    return Focus(
-      focusNode: _focusNode,
-      child: child);
   }
 
   /// Adds the callbacks the user set into JavaScript
@@ -687,91 +842,147 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     if (c.onBeforeCommand != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.before.command', function(_, contents, \$editable) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onBeforeCommand", "contents": contents}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onBeforeCommand.name}",
+              "${EventDataProperties.data.name}": contents
+            }), "*");
           });\n
         """;
     }
     if (c.onChangeCodeview != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.change.codeview', function(_, contents, \$editable) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeCodeview", "contents": contents}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onChangeCodeView.name}",
+              "${EventDataProperties.data.name}": contents
+            }), "*");
           });\n
         """;
     }
     if (c.onDialogShown != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.dialog.shown', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDialogShown"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onDialogShown.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onEnter != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.enter', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onEnter"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onEnter.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onFocus != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.focus', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onFocus"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onFocus.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onBlur != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.blur', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onBlur"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onBlur.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onBlurCodeview != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.blur.codeview', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onBlurCodeview"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onBlurCodeView.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onKeyDown != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.keydown', function(_, e) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onKeyDown", "keyCode": e.keyCode}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onKeyDown.name}",
+              "${EventDataProperties.data.name}": e.keyCode
+            }), "*");
           });\n
         """;
     }
     if (c.onKeyUp != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.keyup', function(_, e) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onKeyUp", "keyCode": e.keyCode}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onKeyUp.name}",
+              "${EventDataProperties.data.name}": e.keyCode
+            }), "*");
           });\n
         """;
     }
     if (c.onMouseDown != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.mousedown', function(_) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onMouseDown"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onMouseDown.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onMouseUp != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.mouseup', function(_) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onMouseUp"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onMouseUp.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onPaste != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.paste', function(_) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onPaste"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onPaste.name}"
+            }), "*");
           });\n
         """;
     }
     if (c.onScroll != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.scroll', function(_) {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onScroll"}), "*");
+            window.parent.postMessage(JSON.stringify({
+              "${EventDataProperties.id.name}": "$createdViewId",
+              "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+              "${EventDataProperties.method.name}": "${DefaultTransferMethod.onScroll.name}"
+            }), "*");
           });\n
         """;
     }
@@ -779,12 +990,24 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       callbacks =
       """$callbacks          \$('#summernote-2').on('summernote.mouseup', function(_) {
             try {
-              var fontSize = \$(window.getSelection().getRangeAt(0).startContainer.parentNode).css("font-size")
-              fontSize = fontSize.replace("px", "");
-              var size = parseInt(fontSize);
-              window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onTextFontSizeChanged", "size": size}), "*");
-            } catch(e) {
-              console.log("JavascriptUtils::summernote.mouseup::Exception", e);
+              var selection = window.getSelection();
+
+              var fontSize = selection && selection.rangeCount > 0 
+                  && selection.getRangeAt(0).startContainer.parentNode 
+                  && \$(selection.getRangeAt(0).startContainer.parentNode).css("font-size");
+              console.log("JavascriptUtils::summernote.mouseup::fontSize:", fontSize);
+              if (fontSize) {
+                fontSize = fontSize.replace("px", "");
+                var size = parseInt(fontSize);
+                window.parent.postMessage(JSON.stringify({
+                  "${EventDataProperties.id.name}": "$createdViewId",
+                  "${EventDataProperties.type.name}": "${TransferType.toDart.name}",
+                  "${EventDataProperties.method.name}": "${DefaultTransferMethod.onTextFontSizeChanged.name}",
+                  "${EventDataProperties.data.name}": size
+                }), "*");
+              }
+            } catch(error) {
+              console.error("JavascriptUtils::summernote.mouseup::Exception", error.message);
             }
           });\n
         """;
@@ -793,210 +1016,255 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   }
 
   /// Adds an event listener to check when a callback is fired
-  void addJSListener(Callbacks c) {
-    _editorJSListener = html.window.onMessage.listen((event) {
-      var data = json.decode(event.data);
+  void _addWindowListener() {
+    _onWindowMessageStreamSubscription = html.window.onMessage.listen(_handleOnMessageEventData);
+  }
 
-      if (data['view'] != createdViewId) return;
+  void _handleOnMessageEventData(html.MessageEvent event) {
+    try {
+      final transferEventData = TransferEventData.fromJson(jsonDecode(event.data));
+      debugPrint('_HtmlEditorWidgetWebState::_handleOnMessageEventData: transferEventData = $transferEventData');
 
-      if (data['type'] != null && data['type'].contains('toDart:')) {
-        if (data['type'].contains('onBeforeCommand')) {
-          c.onBeforeCommand!.call(data['contents']);
-        }
-        if (data['type'].contains('onChangeContent')) {
-          c.onChangeContent!.call(data['contents']);
-        }
-        if (data['type'].contains('onChangeCodeview')) {
-          c.onChangeCodeview!.call(data['contents']);
-        }
-        if (data['type'].contains('onDialogShown')) {
-          c.onDialogShown!.call();
-        }
-        if (data['type'].contains('onEnter')) {
-          c.onEnter!.call();
-        }
-        if (data['type'].contains('onFocus')) {
-          _focusNode.requestFocus();
-          c.onFocus!.call();
-        }
-        if (data['type'].contains('onBlur')) {
-          c.onBlur!.call();
-        }
-        if (data['type'].contains('onBlurCodeview')) {
-          c.onBlurCodeview!.call();
-        }
-        if (data['type'].contains('onImageLinkInsert')) {
-          c.onImageLinkInsert!.call(data['url']);
-        }
-        if (data['type'].contains('onImageUpload')) {
-          try {
-            final jsonString = jsonEncode(data['listFileUploaded']);
-            List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
-            final listFileUpload = dataList.map((data) => FileUpload.fromJson(data)).toList();
-            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: COUNT_FILE_UPLOADED: ${listFileUpload.length}');
-            c.onImageUpload!.call(listFileUpload);
-          } catch (e) {
-            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: Exception: $e');
-            c.onImageUploadError!.call(null, null, UploadError.jsException);
-          }
-        }
-        if (data['type'].contains('onImageUploadError')) {
-          final error = data['error'];
-          final base64 = data['base64'];
+      if (transferEventData.id != createdViewId) return;
 
-          UploadError uploadError;
-          if (error.contains('base64')) {
-            uploadError = UploadError.jsException;
-          } else if (error.contains('unsupported')) {
-            uploadError = UploadError.unsupportedFile;
-          } else {
-            uploadError = UploadError.exceededMaxSize;
-          }
+      switch(transferEventData.type) {
+        case TransferType.toDart:
+          _handleTransferEventDataFromIframe(transferEventData);
+          break;
+        case TransferType.toIframe:
+          break;
+      }
+    } catch (e) {
+      debugPrint('_HtmlEditorWidgetWebState::_handleOnMessageEventData:Exception = $e');
+    }
+  }
 
-          try {
+  void _handleTransferEventDataFromIframe(TransferEventData eventData) {
+    final data = eventData.data;
 
-            if (base64 != null) {
-              c.onImageUploadError!.call(null, base64, uploadError);
-            } else {
-              final jsonString = jsonEncode(data['listFileFailed']);
-              List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
-              final listFileUploadFailed = dataList.map((data) => FileUpload.fromJson(data)).toList();
-              debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: COUNT_FILE_FAILED: ${listFileUploadFailed.length}');
-              c.onImageUpload!.call(listFileUploadFailed);
-            }
-          } catch (e) {
-            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: Exception: $e');
-            c.onImageUploadError!.call(null, null, uploadError);
-          }
+    final defaultTransferMethod = DefaultTransferMethod.values
+      .firstWhere(
+        (method) => method.name == eventData.method?.value,
+        orElse: () => DefaultTransferMethod.unknown
+      );
+
+    switch(defaultTransferMethod) {
+      case DefaultTransferMethod.onBeforeCommand:
+        widget.callbacks?.onBeforeCommand?.call(data);
+        break;
+      case DefaultTransferMethod.onChangeCodeView:
+        widget.callbacks?.onChangeCodeview?.call(data);
+        break;
+      case DefaultTransferMethod.onDialogShown:
+        widget.callbacks?.onDialogShown?.call();
+        break;
+      case DefaultTransferMethod.onEnter:
+        widget.callbacks?.onEnter?.call();
+        break;
+      case DefaultTransferMethod.onFocus:
+        widget.callbacks?.onFocus?.call();
+        break;
+      case DefaultTransferMethod.onBlur:
+        widget.callbacks?.onBlur?.call();
+        break;
+      case DefaultTransferMethod.onBlurCodeView:
+        widget.callbacks?.onBlurCodeview?.call();
+        break;
+      case DefaultTransferMethod.onImageLinkInsert:
+        widget.callbacks?.onImageLinkInsert?.call(data);
+        break;
+      case DefaultTransferMethod.onImageUpload:
+        _handleImageUploadSuccess(data);
+        break;
+      case DefaultTransferMethod.onImageUploadError:
+        _handleImageUploadFailure(data);
+        break;
+      case DefaultTransferMethod.onKeyDown:
+        widget.callbacks?.onKeyDown?.call(data);
+        break;
+      case DefaultTransferMethod.onKeyUp:
+        widget.callbacks?.onKeyUp?.call(data);
+        break;
+      case DefaultTransferMethod.onMouseDown:
+        widget.callbacks?.onMouseDown?.call();
+        break;
+      case DefaultTransferMethod.onMouseUp:
+        widget.callbacks?.onMouseUp?.call();
+        break;
+      case DefaultTransferMethod.onPaste:
+        widget.callbacks?.onPaste?.call();
+        break;
+      case DefaultTransferMethod.onScroll:
+        widget.callbacks?.onScroll?.call();
+        break;
+      case DefaultTransferMethod.characterCount:
+        widget.controller.characterCount = data;
+        break;
+      case DefaultTransferMethod.onTextFontSizeChanged:
+        widget.callbacks?.onTextFontSizeChanged?.call(data);
+        break;
+      case DefaultTransferMethod.onDragEnter:
+        widget.callbacks?.onDragEnter?.call(data);
+        break;
+      case DefaultTransferMethod.onDragLeave:
+        widget.callbacks?.onDragLeave?.call(data);
+        break;
+      case DefaultTransferMethod.onSelectMention:
+        final listOnSelectMethod = widget.plugins
+          .whereType<SummernoteAtMention>()
+          .where((plugin) => plugin.onSelect != null);
+
+        for (var mention in listOnSelectMethod) {
+          mention.onSelect?.call(data);
         }
-        if (data['type'].contains('onKeyDown')) {
-          c.onKeyDown!.call(data['keyCode']);
+        break;
+      case DefaultTransferMethod.onIframeLoaded:
+        _handleOnIframeLoaded();
+        break;
+      case DefaultTransferMethod.getHeight:
+        if (widget.htmlEditorOptions.autoAdjustHeight) {
+          _handleGetHeight(data);
         }
-        if (data['type'].contains('onKeyUp')) {
-          c.onKeyUp!.call(data['keyCode']);
-        }
-        if (data['type'].contains('onMouseDown')) {
-          c.onMouseDown!.call();
-        }
-        if (data['type'].contains('onMouseUp')) {
-          c.onMouseUp!.call();
-        }
-        if (data['type'].contains('onPaste')) {
-          c.onPaste!.call();
-        }
-        if (data['type'].contains('onScroll')) {
-          c.onScroll!.call();
-        }
-        if (data['type'].contains('characterCount')) {
-          widget.controller.characterCount = data['totalChars'];
-        }
-        if (data['type'].contains('onTextFontSizeChanged')) {
-          c.onTextFontSizeChanged!.call(data['size']);
-        }
-        if (data['type'].contains('onDragEnter') && c.onDragEnter != null) {
-          c.onDragEnter!.call(data['types']);
-        }
-        if (data['type'].contains('onDragLeave') && c.onDragLeave != null) {
-          c.onDragLeave!.call(data['types']);
-        }
+        break;
+      case DefaultTransferMethod.insertSignature:
+      case DefaultTransferMethod.removeSignature:
+      case DefaultTransferMethod.updateBodyDirection:
+        widget.callbacks?.onChangeContent?.call(data);
+        break;
+      case DefaultTransferMethod.onChangeContent:
+        _handleOnChangeContent(data);
+        break;
+      case DefaultTransferMethod.updateToolbar:
+        widget.controller.toolbar?.updateToolbar(data);
+        break;
+      default:
+        break;
+    }
+  }
+
+  void _handleImageUploadSuccess(dynamic data) {
+    try {
+      final jsonString = jsonEncode(data);
+      List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
+      final listFileUpload = dataList.map((data) => FileUpload.fromJson(data)).toList();
+      debugPrint('_HtmlEditorWidgetWebState::_handleImageUploadSuccess: COUNT_FILE_UPLOADED: ${listFileUpload.length}');
+      widget.callbacks?.onImageUpload?.call(listFileUpload);
+    } catch (e) {
+      debugPrint('_HtmlEditorWidgetWebState::_handleImageUploadSuccess: Exception: $e');
+      widget.callbacks?.onImageUploadError?.call(null, null, UploadError.jsException);
+    }
+  }
+
+  void _handleImageUploadFailure(dynamic data) {
+    try {
+      final error = data['error'];
+      final base64 = data['base64'];
+
+      UploadError uploadError;
+      if (error.contains('base64')) {
+        uploadError = UploadError.jsException;
+      } else if (error.contains('unsupported')) {
+        uploadError = UploadError.unsupportedFile;
+      } else {
+        uploadError = UploadError.exceededMaxSize;
       }
 
-      if (data['message'] == _summernoteLoadedMessage) {
-        if (widget.htmlEditorOptions.disabled && !alreadyDisabled) {
-          widget.controller.disable();
-          alreadyDisabled = true;
-        }
-        if (widget.callbacks != null && widget.callbacks!.onInit != null) {
-          widget.callbacks!.onInit!.call();
-        }
-        if (widget.htmlEditorOptions.initialText != null) {
-          widget.controller.setText(widget.htmlEditorOptions.initialText!);
-          widget.callbacks?.onInitialTextLoadComplete?.call(
-            widget.htmlEditorOptions.initialText!);
-        }
-        var data = <String, Object>{'type': 'toIframe: getHeight'};
-        data['view'] = createdViewId;
-        var data2 = <String, Object>{'type': 'toIframe: setInputType'};
-        data2['view'] = createdViewId;
-        var jsonStr = _jsonEncoder.convert(data);
-        var jsonStr2 = _jsonEncoder.convert(data2);
-        _summernoteOnLoadListener = html.window.onMessage.listen((event) {
-          var data = json.decode(event.data);
-          if (data['type'] != null &&
-              data['type'].contains('toDart: htmlHeight') &&
-              data['view'] == createdViewId &&
-              widget.htmlEditorOptions.autoAdjustHeight) {
-            final docHeight = data['height'] ?? actualHeight;
-            if ((docHeight != null && docHeight != actualHeight) &&
-                mounted &&
-                docHeight > 0) {
-              setState(mounted, this.setState, () {
-                actualHeight =
-                    docHeight + (toolbarKey.currentContext?.size?.height ?? 0);
-              });
-            }
-          }
-          if (data['type'] != null &&
-              data['type'].contains('toDart: onChangeContent') &&
-              data['view'] == createdViewId) {
-            if (widget.callbacks != null &&
-                widget.callbacks!.onChangeContent != null) {
-              widget.callbacks!.onChangeContent!.call(data['contents']);
-            }
-
-            if (mounted) {
-              final scrollableState = Scrollable.maybeOf(context);
-              if (widget.htmlEditorOptions.shouldEnsureVisible &&
-                  scrollableState != null) {
-                scrollableState.position.ensureVisible(
-                    context.findRenderObject()!,
-                    duration: const Duration(milliseconds: 100),
-                    curve: Curves.easeIn);
-              }
-            }
-          }
-          if (data['type'] != null &&
-              data['type'].contains('toDart: updateToolbar') &&
-              data['view'] == createdViewId) {
-            if (widget.controller.toolbar != null) {
-              widget.controller.toolbar!.updateToolbar(data);
-            }
-          }
-        });
-        html.window.postMessage(jsonStr, '*');
-        html.window.postMessage(jsonStr2, '*');
-
-        if (widget.otherOptions.dropZoneHeight != null ||
-            widget.otherOptions.dropZoneWidth != null) {
-          _setDimensionDropZoneView(
-            height: widget.otherOptions.dropZoneHeight,
-            width: widget.otherOptions.dropZoneWidth
-          );
-        }
+      if (base64 != null) {
+        widget.callbacks?.onImageUploadError?.call(null, base64, uploadError);
+      } else {
+        final jsonString = jsonEncode(data['listFileFailed']);
+        List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
+        final listFileUploadFailed = dataList.map((data) => FileUpload.fromJson(data)).toList();
+        debugPrint('_HtmlEditorWidgetWebState::_handleImageUploadFailure: COUNT_FILE_FAILED: ${listFileUploadFailed.length}');
+        widget.callbacks?.onImageUpload?.call(listFileUploadFailed);
       }
-    });
+    } catch (e) {
+      debugPrint('_HtmlEditorWidgetWebState::_handleImageUploadFailure: Exception: $e');
+      widget.callbacks?.onImageUploadError?.call(null, null, UploadError.jsException);
+    }
+  }
+
+  void _handleOnIframeLoaded() {
+    if (widget.htmlEditorOptions.disabled && !alreadyDisabled) {
+      widget.controller.disable();
+      alreadyDisabled = true;
+    }
+    if (widget.callbacks?.onInit != null) {
+      widget.callbacks?.onInit?.call();
+    }
+    if (widget.htmlEditorOptions.initialText != null) {
+      widget.controller.setText(widget.htmlEditorOptions.initialText!);
+      widget.callbacks?.onInitialTextLoadComplete?.call(widget.htmlEditorOptions.initialText!);
+    }
+
+    _sendEventData(TransferEventData(
+      id: createdViewId,
+      type: TransferType.toIframe,
+      method: DefaultTransferMethod.getHeight.method));
+
+    _sendEventData(TransferEventData(
+      id: createdViewId,
+      type: TransferType.toIframe,
+      method: DefaultTransferMethod.setInputType.method));
+
+    if (widget.otherOptions.dropZoneHeight != null ||
+        widget.otherOptions.dropZoneWidth != null) {
+      _setDimensionDropZoneView(
+          height: widget.otherOptions.dropZoneHeight,
+          width: widget.otherOptions.dropZoneWidth
+      );
+    }
+  }
+
+  void _handleGetHeight(dynamic height) {
+    if (!mounted) return;
+
+    final docHeight = height ?? actualHeight;
+    final toolbarKeyHeight = toolbarKey.currentContext?.size?.height ?? 0;
+
+    if (docHeight > 0 && docHeight != actualHeight) {
+      this.setState(() {
+        actualHeight = docHeight + toolbarKeyHeight;
+      });
+    }
+  }
+
+  void _handleOnChangeContent(dynamic data) {
+    widget.callbacks?.onChangeContent?.call(data);
+
+    if (!mounted) return;
+
+    final renderObject = context.findRenderObject();
+    if (widget.htmlEditorOptions.shouldEnsureVisible && renderObject != null) {
+      Scrollable.maybeOf(context)?.position.ensureVisible(
+        renderObject,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeIn
+      );
+    }
   }
 
   void _setDimensionDropZoneView({double? height, double? width}) {
-    var dataDimension = <String, Object>{
-      'type': 'toIframe: setDimensionDropZone',
-      'view': createdViewId,
-    };
-    if (height != null) {
-      dataDimension['height'] = '${height.round()}';
-    }
-    if (width != null) {
-      dataDimension['width'] = '${width.round()}';
-    }
-    final jsonDimension = _jsonEncoder.convert(dataDimension);
-    html.window.postMessage(jsonDimension, '*');
+    final eventData = TransferEventData(
+      id: createdViewId,
+      type: TransferType.toIframe,
+      method: DefaultTransferMethod.setDimensionDropZone.method,
+      data: <String, Object>{
+        if (height != null) 'height': '${height.round()}',
+        if (width != null) 'width': '${width.round()}'
+      }
+    );
+
+    _sendEventData(eventData);
+  }
+
+  void _sendEventData(TransferEventData eventData) {
+    html.window.postMessage(_jsonEncoder.convert(eventData.toJson()), '*');
   }
 
   @override
   void dispose() {
-    _editorJSListener?.cancel();
-    _summernoteOnLoadListener?.cancel();
-    _focusNode.dispose();
+    _onWindowMessageStreamSubscription?.cancel();
     super.dispose();
   }
 }

@@ -46,8 +46,8 @@ class SummernoteAtMention extends Plugins {
     var mentionsString = '[';
     for (var e in mentionsWeb!) {
       mentionsString =
-          mentionsString + "'$e'" + (e != mentionsWeb!.last ? ', ' : '');
+          "$mentionsString'$e'${e != mentionsWeb!.last ? ', ' : ''}";
     }
-    return mentionsString + ']';
+    return '$mentionsString]';
   }
 }

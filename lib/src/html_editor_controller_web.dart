@@ -6,41 +6,15 @@ import 'package:flutter/foundation.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/html_editor_controller_unsupported.dart'
     as unsupported;
+import 'package:html_editor_enhanced/src/model/default_transfer_method.dart';
+import 'package:html_editor_enhanced/src/model/transfer_event_data.dart';
+import 'package:html_editor_enhanced/src/model/transfer_method.dart';
+import 'package:html_editor_enhanced/src/model/transfer_type.dart';
 import 'package:meta/meta.dart';
 
 /// Controller for web
 class HtmlEditorController extends unsupported.HtmlEditorController {
-  HtmlEditorController({
-    this.processInputHtml = true,
-    this.processNewLineAsBr = false,
-    this.processOutputHtml = true,
-  });
-
-  /// Toolbar widget state to call various methods. For internal use only.
-  @override
-  ToolbarWidgetState? toolbar;
-
-  /// Determines whether text processing should happen on input HTML, e.g.
-  /// whether a new line should be converted to a <br>.
-  ///
-  /// The default value is true.
-  @override
-  final bool processInputHtml;
-
-  /// Determines whether newlines (\n) should be written as <br>. This is not
-  /// recommended for HTML documents.
-  ///
-  /// The default value is false.
-  @override
-  final bool processNewLineAsBr;
-
-  /// Determines whether text processing should happen on output HTML, e.g.
-  /// whether <p><br></p> is returned as "". For reference, Summernote uses
-  /// that HTML as the default HTML (when no text is in the editor).
-  ///
-  /// The default value is true.
-  @override
-  final bool processOutputHtml;
+  final _jsonEncoder = const JsonEncoder();
 
   /// Manages the view ID for the [HtmlEditorController] on web
   String? _viewId;
@@ -54,10 +28,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   /// Gets the text from the editor and returns it as a [String].
   @override
   Future<String> getText() async {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: getText'});
-    var e = await html.window.onMessage.firstWhere(
-        (element) => json.decode(element.data)['type'] == 'toDart: getText');
-    String text = json.decode(e.data)['text'];
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.getText.method);
+    final eventData = await _getEventDataOnMessageToDart(method: DefaultTransferMethod.getText.method);
+    String text = eventData?.data ?? '';
     if (processOutputHtml &&
         (text.isEmpty ||
             text == '<p></p>' ||
@@ -69,10 +42,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   /// Gets the text with signature content from the editor and returns it as a [String].
   @override
   Future<String> getTextWithSignatureContent() async {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: getTextWithSignatureContent'});
-    var e = await html.window.onMessage.firstWhere(
-            (element) => json.decode(element.data)['type'] == 'toDart: getTextWithSignatureContent');
-    String text = json.decode(e.data)['text'];
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.getTextWithSignatureContent.method);
+    final eventData = await _getEventDataOnMessageToDart(method: DefaultTransferMethod.getTextWithSignatureContent.method);
+    String text = eventData?.data ?? '';
     if (processOutputHtml &&
         (text.isEmpty ||
             text == '<p></p>' ||
@@ -83,14 +55,13 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
 
   @override
   Future<String> getSelectedTextWeb({bool withHtmlTags = false}) async {
-    if (withHtmlTags) {
-      _evaluateJavascriptWeb(data: {'type': 'toIframe: getSelectedTextHtml'});
-    } else {
-      _evaluateJavascriptWeb(data: {'type': 'toIframe: getSelectedText'});
-    }
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: getSelectedText');
-    return json.decode(e.data)['text'];
+    final method = withHtmlTags
+      ? DefaultTransferMethod.getSelectedTextHtml.method
+      : DefaultTransferMethod.getSelectedText.method;
+    _evaluateJavascriptWeb(method: method);
+    final eventData = await _getEventDataOnMessageToDart(method: method);
+    String text = eventData?.data ?? '';
+    return text;
   }
 
   /// Sets the text of the editor. Some pre-processing is applied to convert
@@ -98,57 +69,55 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   void setText(String text) {
     text = _processHtml(html: text);
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: setText', 'text': text});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.setText.method, data: text);
   }
 
   /// Sets the editor to full-screen mode.
   @override
   void setFullScreen() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: setFullScreen'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.setFullScreen.method);
   }
 
   /// isFullScreen mode in the Html editor
   @override
   Future<bool> isFullScreen() async {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: isFullScreen'});
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: isFullScreen');
-    bool value = json.decode(e.data)['value'];
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.isFullScreen.method);
+    final eventData = await _getEventDataOnMessageToDart(method: DefaultTransferMethod.isFullScreen.method);
+    bool value = eventData?.data ?? false;
     return value;
   }
 
   /// Sets the focus to the editor.
   @override
   void setFocus() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: setFocus'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.setFocus.method);
   }
 
   /// Clears the editor of any text.
   @override
   void clear() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: clear'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.clear.method);
   }
 
   /// Sets the hint for the editor.
   @override
   void setHint(String text) {
     text = _processHtml(html: text);
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: setHint', 'text': text});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.setHint.method, data: text);
   }
 
   /// toggles the codeview in the Html editor
   @override
   void toggleCodeView() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: toggleCodeview'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.toggleCodeView.method);
   }
 
   /// isActivated the codeView in the Html editor
   @override
   Future<bool> isActivatedCodeView() async {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: isActivatedCodeView'});
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: isActivatedCodeView');
-    bool isActivated = json.decode(e.data)['value'];
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.isActivatedCodeView.method);
+    final eventData = await _getEventDataOnMessageToDart(method: DefaultTransferMethod.isActivatedCodeView.method);
+    bool isActivated = eventData?.data ?? false;
     return isActivated;
   }
 
@@ -156,34 +125,33 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   void disable() {
     toolbar!.disable();
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: disable'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.disable.method);
   }
 
   /// enables the Html editor
   @override
   void enable() {
     toolbar!.enable();
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: enable'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.enable.method);
   }
 
   /// Undoes the last action
   @override
   void undo() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: undo'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.undo.method);
   }
 
   /// Redoes the last action
   @override
   void redo() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: redo'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.redo.method);
   }
 
   /// Insert text at the end of the current HTML content in the editor
   /// Note: This method should only be used for plaintext strings
   @override
   void insertText(String text) {
-    _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: insertText', 'text': text});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.insertText.method, data: text);
   }
 
   /// Insert HTML at the position of the cursor in the editor
@@ -191,29 +159,32 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   void insertHtml(String html) {
     html = _processHtml(html: html);
-    _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: insertHtml', 'html': html});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.insertHtml.method, data: html);
   }
 
   /// Insert a network image at the position of the cursor in the editor
   @override
   void insertNetworkImage(String url, {String filename = ''}) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: insertNetworkImage',
-      'url': url,
-      'filename': filename
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.insertNetworkImage.method,
+      data: {
+        'url': url,
+        'filename': filename
+      }
+    );
   }
 
   /// Insert a link at the position of the cursor in the editor
   @override
   void insertLink(String text, String url, bool isNewWindow) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: insertLink',
-      'text': text,
-      'url': url,
-      'isNewWindow': isNewWindow
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.insertLink.method,
+      data: {
+        'text': text,
+        'url': url,
+        'isNewWindow': isNewWindow
+      }
+    );
   }
 
   /// Clears the focus from the webview by hiding the keyboard, calling the
@@ -239,45 +210,47 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   /// Note: This should only be used in Flutter Web!!!
   @override
   void reloadWeb() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: reload'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.reload.method);
   }
 
   /// Recalculates the height of the editor to remove any vertical scrolling.
   /// This method will not do anything if [autoAdjustHeight] is turned off.
   @override
   void recalculateHeight() {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: getHeight',
-    });
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.getHeight.method);
   }
 
   /// A function to quickly call a document.execCommand function in a readable format
   @override
   void execCommand(String command, {String? argument}) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: execCommand',
-      'command': command,
-      'argument': argument
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.execCommand.method,
+      data: {
+        'command': command,
+        'argument': argument
+      }
+    );
   }
 
   /// A function to quickly call a Summernote API function in a readable format
   @override
   void execSummernoteAPI(String nameAPI, {String? value}) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: execSummernoteAPI',
-      'nameAPI': nameAPI,
-      'value': value
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.execSummernoteAPI.method,
+      data: {
+        'nameAPI': nameAPI,
+        'value': value
+      }
+    );
   }
 
   /// A function to set font size for text selected
   @override
   void setFontSize(int size) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: setFontSize',
-      'size': size
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.setFontSize.method,
+      data: size
+    );
   }
 
   /// A function to execute JS passed as a [WebScript] to the editor. This should
@@ -285,11 +258,11 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   Future<dynamic> evaluateJavascriptWeb(String name,
       {bool hasReturnValue = false}) async {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: $name'});
+    final transferMethod = TransferMethod(name);
+    _evaluateJavascriptWeb(method: transferMethod);
     if (hasReturnValue) {
-      var e = await html.window.onMessage.firstWhere(
-          (element) => json.decode(element.data)['type'] == 'toDart: $name');
-      return json.decode(e.data);
+      final eventData = await _getEventDataOnMessageToDart(method: transferMethod);
+      return eventData;
     }
   }
 
@@ -297,37 +270,45 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   void changeListStyle(String changed) {
     _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: changeListStyle', 'changed': changed});
+      method: DefaultTransferMethod.changeListStyle.method,
+      data: changed
+    );
   }
 
   /// Internal function to change line height on Web
   @override
   void changeLineHeight(String changed) {
     _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: changeLineHeight', 'changed': changed});
+      method: DefaultTransferMethod.changeLineHeight.method,
+      data: changed
+    );
   }
 
   /// Internal function to change text direction on Web
   @override
   void changeTextDirection(String direction) {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: changeTextDirection',
-      'direction': direction
-    });
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.changeTextDirection.method,
+      data: direction
+    );
   }
 
   /// Internal function to change case on Web
   @override
   void changeCase(String changed) {
     _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: changeCase', 'case': changed});
+      method: DefaultTransferMethod.changeCase.method,
+      data: changed
+    );
   }
 
   /// Internal function to insert table on Web
   @override
   void insertTable(String dimensions) {
     _evaluateJavascriptWeb(
-        data: {'type': 'toIframe: insertTable', 'dimensions': dimensions});
+      method: DefaultTransferMethod.insertTable.method,
+      data: dimensions
+    );
   }
 
   /// Add a notification to the bottom of the editor. This is styled similar to
@@ -335,23 +316,20 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   /// and the notificationType determines how the alert is displayed.
   @override
   void addNotification(String html, NotificationType notificationType) {
-    if (notificationType == NotificationType.plaintext) {
-      _evaluateJavascriptWeb(
-          data: {'type': 'toIframe: addNotification', 'html': html});
-    } else {
-      _evaluateJavascriptWeb(data: {
-        'type': 'toIframe: addNotification',
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.addNotification.method,
+      data: {
         'html': html,
-        'alertType': 'alert alert-${describeEnum(notificationType)}'
-      });
-    }
+        if (notificationType != NotificationType.plaintext) 'alertType': 'alert alert-${notificationType.name}'
+      }
+    );
     recalculateHeight();
   }
 
   /// Remove the current notification from the bottom of the editor
   @override
   void removeNotification() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: removeNotification'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.removeNotification.method);
     recalculateHeight();
   }
 
@@ -369,40 +347,70 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   }
 
   /// Helper function to run javascript and check current environment
-  void _evaluateJavascriptWeb({required Map<String, Object?> data}) async {
-    if (kIsWeb) {
-      data['view'] = _viewId;
-      const jsonEncoder = JsonEncoder();
-      var json = jsonEncoder.convert(data);
-      html.window.postMessage(json, '*');
-    } else {
+  void _evaluateJavascriptWeb({
+    required TransferMethod method,
+    TransferType type = TransferType.toIframe,
+    dynamic data,
+  }) async {
+    if (!kIsWeb) {
       throw Exception(
-          'Non-Flutter Web environment detected, please make sure you are importing package:html_editor_enhanced/html_editor.dart');
+        'Non-Flutter Web environment detected, please make sure you are importing package:html_editor_enhanced/html_editor.dart');
     }
+
+    if (_viewId == null) return;
+
+    final eventData = TransferEventData(
+      id: _viewId!,
+      type: type,
+      method: method,
+      data: data
+    );
+    debugPrint('HtmlEditorController::_evaluateJavascriptWeb: EventData = $eventData');
+    _sendEventData(eventData);
   }
 
   @override
   void insertSignature(String signature) {
     _evaluateJavascriptWeb(
-      data: {
-        'type': 'toIframe: insertSignature',
-        'signature': signature,
-      }
+      method: DefaultTransferMethod.insertSignature.method,
+      data: signature
     );
   }
 
   @override
   void removeSignature() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: removeSignature'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.removeSignature.method);
   }
 
   @override
   void updateBodyDirection(String direction) {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: updateBodyDirection', 'direction': direction});
+    _evaluateJavascriptWeb(
+      method: DefaultTransferMethod.updateBodyDirection.method,
+      data: direction
+    );
   }
 
   @override
   void setOnDragDropEvent() {
-    _evaluateJavascriptWeb(data: {'type': 'toIframe: onDragDropEvent'});
+    _evaluateJavascriptWeb(method: DefaultTransferMethod.onDragDropEvent.method);
+  }
+
+  void _sendEventData(TransferEventData eventData) {
+    html.window.postMessage(_jsonEncoder.convert(eventData.toJson()), '*');
+  }
+
+  Future<TransferEventData?> _getEventDataOnMessageToDart({required TransferMethod method}) async {
+    try {
+      final messageEvent = await html.window.onMessage.firstWhere((event) {
+        final transferEventData = TransferEventData.fromJson(jsonDecode(event.data));
+        return transferEventData.type == TransferType.toDart 
+          && transferEventData.method == method;
+      });
+      final eventData = TransferEventData.fromJson(jsonDecode(messageEvent.data));
+      return eventData;
+    } catch (e) {
+      debugPrint('HtmlEditorController::_parsingEventDataFromOnMessage:Exception = $e');
+      return null;
+    }
   }
 }

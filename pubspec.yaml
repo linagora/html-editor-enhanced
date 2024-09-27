@@ -30,10 +30,18 @@ dependencies:
   flutter_lints: ^2.0.1
   # plugin for @internal annotation
   meta: '>=1.0.0 <2.0.0'
+  # plugin for simplify equality comparisons
+  equatable: ^2.0.5
+  # plugin for json annotation
+  json_annotation: ^4.8.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  build_runner: ^2.3.3
+
+  json_serializable: ^6.6.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

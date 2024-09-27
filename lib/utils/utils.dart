@@ -90,7 +90,7 @@ class EditorSettings {
 /// [name] provides a unique identifier for the script. Note: It must be unique!
 /// Otherwise your script may not be called when using [controller.evaluateJavascriptWeb].
 /// [script] provides the script itself. If you'd like to return a value back to
-/// Dart, you can do that via a postMessage call (see the README for an example).
+/// Dart, you can do that via a  call (see the README for an example).
 class WebScript {
   String name;
   String script;
@@ -836,7 +836,7 @@ class CustomDropdownButton<T> extends StatefulWidget {
   final double? menuMaxHeight;
 
   @override
-  _DropdownButtonState<T> createState() => _DropdownButtonState<T>();
+  State<CustomDropdownButton<T>> createState() => _DropdownButtonState<T>();
 }
 
 class _DropdownButtonState<T> extends State<CustomDropdownButton<T>>
@@ -1090,9 +1090,11 @@ class _DropdownButtonState<T> extends State<CustomDropdownButton<T>>
       hintIndex = items.length;
       items.add(DefaultTextStyle(
         style: _textStyle!.copyWith(color: Theme.of(context).hintColor),
-        child: IgnorePointer(
-          ignoringSemantics: false,
-          child: displayedHint,
+        child: ExcludeSemantics(
+          excluding: false,
+          child: IgnorePointer(
+            child: displayedHint,
+          ),
         ),
       ));
     }
