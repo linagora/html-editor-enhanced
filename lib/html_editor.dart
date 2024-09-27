@@ -1,5 +1,11 @@
 library html_editor;
 
+export 'package:html_editor_enhanced/src/model/transfer_event_data.dart';
+export 'package:html_editor_enhanced/src/model/transfer_method.dart';
+export 'package:html_editor_enhanced/src/model/transfer_type.dart';
+export 'package:html_editor_enhanced/src/model/event_data_properties.dart';
+export 'package:html_editor_enhanced/src/model/default_transfer_method.dart';
+export 'package:html_editor_enhanced/src/converters/transfer_method_converter.dart';
 export 'package:html_editor_enhanced/src/widgets/toolbar_widget.dart';
 export 'package:html_editor_enhanced/utils/callbacks.dart';
 export 'package:html_editor_enhanced/utils/toolbar.dart';
@@ -8,6 +14,8 @@ export 'package:html_editor_enhanced/utils/file_upload_model.dart';
 export 'package:html_editor_enhanced/utils/options.dart';
 export 'package:html_editor_enhanced/utils/utils.dart'
     hide setState, intersperse, getRandString;
+export 'package:html_editor_enhanced/utils/javascript_utils.dart';
+export 'package:html_editor_enhanced/utils/icon_utils.dart';
 
 export 'package:html_editor_enhanced/src/html_editor_unsupported.dart'
     if (dart.library.html) 'package:html_editor_enhanced/src/html_editor_web.dart'
