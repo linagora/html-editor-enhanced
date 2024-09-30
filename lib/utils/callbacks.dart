@@ -12,7 +12,7 @@ class Callbacks {
     this.onDialogShown,
     this.onEnter,
     this.onFocus,
-    this.onBlur,
+    this.onUnFocus,
     this.onBlurCodeview,
     this.onImageLinkInsert,
     this.onImageUpload,
@@ -93,7 +93,7 @@ class Callbacks {
   /// the webview or dismissing the keyboard does not trigger this callback.
   /// This callback will only be triggered if the user taps on an empty space
   /// in the toolbar or switches the view mode of the editor.
-  void Function()? onBlur;
+  void Function()? onUnFocus;
 
   /// Called whenever the code view either gains or loses focus (the Summernote
   /// docs say this will only be called when the code view loses focus but
