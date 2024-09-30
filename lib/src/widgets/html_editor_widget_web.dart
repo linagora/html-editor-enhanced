@@ -2,7 +2,6 @@ export 'dart:html';
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,10 +63,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   final _jsonEncoder = const JsonEncoder();
 
-  StreamSubscription<MessageEvent>? _editorJSListener;
-  StreamSubscription<MessageEvent>? _summernoteOnLoadListener;
+  StreamSubscription<html.MessageEvent>? _editorJSListener;
+  StreamSubscription<html.MessageEvent>? _summernoteOnLoadListener;
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
-  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -676,9 +674,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       ),
     );
 
-    return Focus(
-      focusNode: _focusNode,
-      child: child);
+    return child;
   }
 
   /// Adds the callbacks the user set into JavaScript
@@ -719,10 +715,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           });\n
         """;
     }
-    if (c.onBlur != null) {
+    if (c.onUnFocus != null) {
       callbacks =
           """$callbacks          \$('#summernote-2').on('summernote.blur', function() {
-            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onBlur"}), "*");
+            window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onUnFocus"}), "*");
           });\n
         """;
     }
@@ -816,11 +812,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           c.onEnter!.call();
         }
         if (data['type'].contains('onFocus')) {
-          _focusNode.requestFocus();
           c.onFocus!.call();
         }
-        if (data['type'].contains('onBlur')) {
-          c.onBlur!.call();
+        if (data['type'].contains('onUnFocus')) {
+          c.onUnFocus!.call();
         }
         if (data['type'].contains('onBlurCodeview')) {
           c.onBlurCodeview!.call();
@@ -996,7 +991,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   void dispose() {
     _editorJSListener?.cancel();
     _summernoteOnLoadListener?.cancel();
-    _focusNode.dispose();
     super.dispose();
   }
 }
