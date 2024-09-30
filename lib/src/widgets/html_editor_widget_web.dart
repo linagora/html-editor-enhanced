@@ -63,7 +63,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   StreamSubscription<html.MessageEvent>? _editorJSListener;
   StreamSubscription<html.MessageEvent>? _summernoteOnLoadListener;
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
-  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -674,9 +673,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       ],
     );
 
-    return Focus(
-      focusNode: _focusNode,
-      child: child);
+    return child;
   }
 
   /// Adds the callbacks the user set into JavaScript
@@ -814,7 +811,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           c.onEnter!.call();
         }
         if (data['type'].contains('onFocus')) {
-          _focusNode.requestFocus();
           c.onFocus!.call();
         }
         if (data['type'].contains('onUnFocus')) {
@@ -983,7 +979,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   void dispose() {
     _editorJSListener?.cancel();
     _summernoteOnLoadListener?.cancel();
-    _focusNode.dispose();
     super.dispose();
   }
 }
