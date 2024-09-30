@@ -601,10 +601,10 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
           });
         """);
     }
-    if (c.onBlur != null) {
+    if (c.onUnFocus != null) {
       widget.controller.editorController!.evaluateJavascript(source: """
           \$('#summernote-2').on('summernote.blur', function() {
-            window.flutter_inappwebview.callHandler('onBlur', 'fired');
+            window.flutter_inappwebview.callHandler('onUnFocus', 'fired');
           });
         """);
     }
@@ -697,11 +697,11 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
             c.onFocus!.call();
           });
     }
-    if (c.onBlur != null) {
+    if (c.onUnFocus != null) {
       widget.controller.editorController!.addJavaScriptHandler(
-          handlerName: 'onBlur',
+          handlerName: 'onUnFocus',
           callback: (_) {
-            c.onBlur!.call();
+            c.onUnFocus!.call();
           });
     }
     if (c.onBlurCodeview != null) {

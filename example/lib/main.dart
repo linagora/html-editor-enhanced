@@ -119,7 +119,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   debugPrint('enter/return pressed');
                 }, onFocus: () {
                   debugPrint('editor focused');
-                }, onBlur: () {
+                }, onUnFocus: () {
                   debugPrint('editor unfocused');
                 }, onBlurCodeview: () {
                   debugPrint('codeview either focused or unfocused');
