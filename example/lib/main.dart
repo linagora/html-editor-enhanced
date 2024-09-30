@@ -119,7 +119,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   debugPrint('enter/return pressed');
                 }, onFocus: () {
                   debugPrint('editor focused');
-                }, onBlur: () {
+                }, onUnFocus: () {
                   debugPrint('editor unfocused');
                 }, onBlurCodeview: () {
                   debugPrint('codeview either focused or unfocused');
@@ -207,7 +207,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                               Theme.of(context).colorScheme.secondary),
                       onPressed: () async {
                         var txt = await controller.getText();
-                        if (txt.contains('src=\"data:')) {
+                        if (txt.contains('src=\\"data:')) {
                           txt =
                               '<text removed due to base-64 data, displaying the text could cause the app to crash>';
                         }
