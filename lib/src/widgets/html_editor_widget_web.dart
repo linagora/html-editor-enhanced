@@ -47,9 +47,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   /// The view ID for the IFrameElement. Must be unique.
   late String createdViewId;
 
-  /// The actual height of the editor, used to automatically set the height
-  late double actualHeight;
-
   /// A Future that is observed by the [FutureBuilder]. We don't use a function
   /// as the Future on the [FutureBuilder] because when the widget is rebuilt,
   /// the function may be excessively called, hurting performance.
@@ -71,7 +68,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   @override
   void initState() {
-    actualHeight = widget.otherOptions.height;
     createdViewId = getRandString(10);
     widget.controller.viewId = createdViewId;
     initSummernote();
@@ -94,6 +90,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     var headString = '';
     var summernoteCallbacks = '''callbacks: {
         onKeydown: function(e) {
+            if (e.keyCode === 13) { /* ENTER */
+              const editor = querySelector('.note-editable');
+              editor.blur();
+              editor.focus();
+            }
+
             var chars = \$(".note-editable").text();
             var totalChars = chars.length;
             ${widget.htmlEditorOptions.characterLimit != null ? '''allowedKeys = (
@@ -250,7 +252,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           \$('#summernote-2').summernote({
             placeholder: "${widget.htmlEditorOptions.hint}",
             tabsize: 2,
-            height: ${widget.otherOptions.height},
             disableResizeEditor: false,
             disableDragAndDrop: ${widget.htmlEditorOptions.disableDragAndDrop},
             disableGrammar: false,
@@ -281,10 +282,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 
                 var str = \$('#summernote-2').summernote('code');
                 window.parent.postMessage(JSON.stringify({"type": "toDart: getTextWithSignatureContent", "text": str}), "*");
-              }
-              if (data["type"].includes("getHeight")) {
-                var height = document.body.scrollHeight;
-                window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: htmlHeight", "height": height}), "*");
               }
               if (data["type"].includes("setInputType")) {
                 document.getElementsByClassName('note-editable')[0].setAttribute('inputmode', '${widget.htmlEditorOptions.inputType.name}');
@@ -617,9 +614,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     }
     final iframe = html.IFrameElement()
       ..width = maxWidth
-      ..height = widget.htmlEditorOptions.autoAdjustHeight
-          ? actualHeight.toString()
-          : widget.otherOptions.height.toString()
       // ignore: unsafe_html, necessary to load HTML string
       ..srcdoc = htmlString
       ..style.border = 'none'
@@ -635,45 +629,37 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final child = SizedBox(
-      height: widget.htmlEditorOptions.autoAdjustHeight
-          ? actualHeight
-          : widget.otherOptions.height,
-      child: Column(
-        children: <Widget>[
-          widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.aboveEditor
-              ? ToolbarWidget(
-                  key: toolbarKey,
-                  controller: widget.controller,
-                  htmlToolbarOptions: widget.htmlToolbarOptions,
-                  callbacks: widget.callbacks)
-              : const SizedBox(height: 0, width: 0),
-          Expanded(
-              child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: FutureBuilder<bool>(
-                      future: summernoteInit,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return HtmlElementView(
-                            viewType: createdViewId,
-                          );
-                        } else {
-                          return Container(
-                              height: widget.htmlEditorOptions.autoAdjustHeight
-                                  ? actualHeight
-                                  : widget.otherOptions.height);
-                        }
-                      }))),
-          widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.belowEditor
-              ? ToolbarWidget(
-                  key: toolbarKey,
-                  controller: widget.controller,
-                  htmlToolbarOptions: widget.htmlToolbarOptions,
-                  callbacks: widget.callbacks)
-              : const SizedBox(height: 0, width: 0),
-        ],
-      ),
+    final child = Column(
+      children: <Widget>[
+        widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.aboveEditor
+            ? ToolbarWidget(
+                key: toolbarKey,
+                controller: widget.controller,
+                htmlToolbarOptions: widget.htmlToolbarOptions,
+                callbacks: widget.callbacks)
+            : const SizedBox(height: 0, width: 0),
+        Expanded(
+            child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: FutureBuilder<bool>(
+                    future: summernoteInit,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return HtmlElementView(
+                          viewType: createdViewId,
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    }))),
+        widget.htmlToolbarOptions.toolbarPosition == ToolbarPosition.belowEditor
+            ? ToolbarWidget(
+                key: toolbarKey,
+                controller: widget.controller,
+                htmlToolbarOptions: widget.htmlToolbarOptions,
+                callbacks: widget.callbacks)
+            : const SizedBox(height: 0, width: 0),
+      ],
     );
 
     return Focus(
@@ -914,7 +900,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           widget.callbacks?.onInitialTextLoadComplete?.call(
             widget.htmlEditorOptions.initialText!);
         }
-        var data = <String, Object>{'type': 'toIframe: getHeight'};
+        var data = <String, Object>{};
         data['view'] = createdViewId;
         var data2 = <String, Object>{'type': 'toIframe: setInputType'};
         data2['view'] = createdViewId;
@@ -922,20 +908,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         var jsonStr2 = _jsonEncoder.convert(data2);
         _summernoteOnLoadListener = html.window.onMessage.listen((event) {
           var data = json.decode(event.data);
-          if (data['type'] != null &&
-              data['type'].contains('toDart: htmlHeight') &&
-              data['view'] == createdViewId &&
-              widget.htmlEditorOptions.autoAdjustHeight) {
-            final docHeight = data['height'] ?? actualHeight;
-            if ((docHeight != null && docHeight != actualHeight) &&
-                mounted &&
-                docHeight > 0) {
-              setState(mounted, this.setState, () {
-                actualHeight =
-                    docHeight + (toolbarKey.currentContext?.size?.height ?? 0);
-              });
-            }
-          }
           if (data['type'] != null &&
               data['type'].contains('toDart: onChangeContent') &&
               data['view'] == createdViewId) {

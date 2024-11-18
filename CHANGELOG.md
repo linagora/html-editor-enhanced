@@ -1,3 +1,6 @@
+## [3.1.2] - 2024-11-20
+* Let editor decide its own height instead of calculating html content
+
 ## [3.1.1] - 2024-08-20
 * Support `Copy & Paste` multiple images 
 
