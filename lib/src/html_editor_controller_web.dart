@@ -245,11 +245,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   /// Recalculates the height of the editor to remove any vertical scrolling.
   /// This method will not do anything if [autoAdjustHeight] is turned off.
   @override
-  void recalculateHeight() {
-    _evaluateJavascriptWeb(data: {
-      'type': 'toIframe: getHeight',
-    });
-  }
+  void recalculateHeight() {}
 
   /// A function to quickly call a document.execCommand function in a readable format
   @override
