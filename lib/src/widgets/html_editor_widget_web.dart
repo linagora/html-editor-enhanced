@@ -497,6 +497,18 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                   event.preventDefault();
                   window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragLeave", "types": event.dataTransfer.types}), "*");
                 });
+
+                document.getElementsByClassName('note-editor')[0].addEventListener("dragover", function(event) {
+                  if (event.dataTransfer.types.includes("Files")) {
+                    event.preventDefault();
+                  }
+                });
+
+                document.getElementsByClassName('note-editor')[0].addEventListener("drop", function(event) {
+                  if (event.dataTransfer.types.includes("Files")) {
+                    event.preventDefault();
+                  }
+                });
               }
               $userScripts
             }
