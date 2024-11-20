@@ -498,6 +498,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 document.getElementsByClassName('note-editor')[0].addEventListener("dragover", function(event) {
                   if (event.dataTransfer.types.includes("Files")) {
                     event.preventDefault();
+                    window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter", "types": event.dataTransfer.types}), "*");
                   }
                 });
 
