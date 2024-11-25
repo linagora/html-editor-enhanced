@@ -27,6 +27,7 @@ class Callbacks {
     this.onScroll,
     this.onTextFontSizeChanged,
     this.onDragEnter,
+    this.onDragOver,
     this.onDragLeave,
     this.onInitialTextLoadComplete,
   });
@@ -193,6 +194,8 @@ class Callbacks {
   void Function(int?)? onTextFontSizeChanged;
 
   void Function(List<dynamic>? types)? onDragEnter;
+
+  void Function(List<dynamic>? types)? onDragOver;
 
   void Function(List<dynamic>? types)? onDragLeave;
 
