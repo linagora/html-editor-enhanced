@@ -501,7 +501,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 document.getElementsByClassName('note-editor')[0].addEventListener("dragover", function(event) {
                   if (event.dataTransfer.types.includes("Files")) {
                     event.preventDefault();
-                    window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragEnter", "types": event.dataTransfer.types}), "*");
+                    window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onDragOver", "types": event.dataTransfer.types}), "*");
                   }
                 });
 
@@ -908,6 +908,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (data['type'].contains('onDragEnter') && c.onDragEnter != null) {
           c.onDragEnter!.call(data['types']);
+        }
+        if (data['type'].contains('onDragOver') && c.onDragOver != null) {
+          c.onDragOver!.call(data['types']);
         }
         if (data['type'].contains('onDragLeave') && c.onDragLeave != null) {
           c.onDragLeave!.call(data['types']);
