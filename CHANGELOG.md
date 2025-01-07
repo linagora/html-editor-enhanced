@@ -1,3 +1,7 @@
+## [3.1.3] - 2025-01-07
+* Fix drag & drop files
+* Avoid `onBlur` being called twice when editor loses focus
+
 ## [3.1.2] - 2024-11-20
 * Let editor decide its own height instead of calculating html content
 
