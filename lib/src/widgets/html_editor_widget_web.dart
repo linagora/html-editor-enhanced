@@ -88,12 +88,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     var headString = '';
     var summernoteCallbacks = '''callbacks: {
         onKeydown: function(e) {
-            if (e.keyCode === 13) { /* ENTER */
-              const editor = querySelector('.note-editable');
-              editor.blur();
-              editor.focus();
-            }
-
             var chars = \$(".note-editable").text();
             var totalChars = chars.length;
             ${widget.htmlEditorOptions.characterLimit != null ? '''allowedKeys = (
@@ -114,6 +108,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             if (!allowedKeys && \$(e.target).text().length >= ${widget.htmlEditorOptions.characterLimit}) {
                 e.preventDefault();
             }''' : ''}
+            ${JavascriptUtils.jsHandleOnKeyDown}
             window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: characterCount", "totalChars": totalChars}), "*");
         },
     ''';

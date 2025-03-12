@@ -1,5 +1,7 @@
 
 class IconUtils {
+  IconUtils._();
+
   static const String chevronUpSVGIconUrlEncoded = '''
     url("data:image/svg+xml,%3Csvg class='chevron-down' width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg' %3E%3Cpath d='M14.5352 11.9709C14.8347 12.2276 15.2857 12.193 15.5424 11.8934C15.7991 11.5939 15.7644 11.143 15.4649 10.8863L10.4649 6.60054C10.1974 6.37127 9.8027 6.37127 9.53521 6.60054L4.53521 10.8863C4.23569 11.143 4.201 11.5939 4.45773 11.8934C4.71446 12.193 5.16539 12.2276 5.46491 11.9709L10.0001 8.08364L14.5352 11.9709Z' fill='%23AEAEC0' /%3E%3C/svg%3E")
   ''';
