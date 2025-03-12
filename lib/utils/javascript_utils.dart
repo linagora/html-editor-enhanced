@@ -2,6 +2,7 @@
 import 'package:html_editor_enhanced/utils/icon_utils.dart';
 
 class JavascriptUtils {
+  JavascriptUtils._();
 
   static const String jsHandleInsertSignature = '''
     const signatureNode = document.querySelector('.note-editable > .tmail-signature');
@@ -202,5 +203,31 @@ class JavascriptUtils {
     \$('#summernote-2').on('summernote.keyup', function(_, e) {
       updateTags();
     });
+  ''';
+
+  static const String jsHandleOnKeyDown = '''
+      if (e.which === 13) { // Press "Enter"
+          setTimeout(() => {
+              let selection = window.getSelection();
+              if (selection.rangeCount > 0) {
+                  let range = selection.getRangeAt(0);
+                  let node = range.commonAncestorContainer;
+                  
+                  // If the node is a text node, get its parent element
+                  if (node.nodeType === 3) { 
+                      node = node.parentElement;
+                  }
+  
+                  // Check if the node has no height (empty line after Enter)
+                  if (node && node.getBoundingClientRect().height === 0) {
+                      node = node.nextElementSibling || node.parentElement;
+                  }
+  
+                  if (node) {
+                      node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                  }
+              }
+          }, 50); // Increase delay to 50ms to allow DOM updates
+      }
   ''';
 }
