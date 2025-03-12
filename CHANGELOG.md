@@ -1,3 +1,7 @@
+## [3.1.4] - 2025-03-12
+* Support flutter version `3.24.5`
+* Fix cannot break `quote/code` tag when press Enter key
+
 ## [3.1.3] - 2025-01-07
 * Fix drag & drop files
 * Avoid `onBlur` being called twice when editor loses focus
