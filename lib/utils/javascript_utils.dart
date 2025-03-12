@@ -2,7 +2,7 @@
 import 'package:html_editor_enhanced/utils/icon_utils.dart';
 
 class JavascriptUtils {
-  JavascriptUtils._();
+  const JavascriptUtils._();
 
   static const String jsHandleInsertSignature = '''
     const signatureNode = document.querySelector('.note-editable > .tmail-signature');
