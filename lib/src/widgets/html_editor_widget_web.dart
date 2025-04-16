@@ -598,6 +598,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     }
     var htmlString = await rootBundle.loadString(filePath);
     htmlString = htmlString
+        .replaceFirst('<!--customInternalCSS-->', widget.htmlEditorOptions.customInternalCSS)
         .replaceFirst('<!--darkCSS-->', darkCSS)
         .replaceFirst('<!--headString-->', headString)
         .replaceFirst('<!--summernoteScripts-->', summernoteScripts)
