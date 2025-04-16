@@ -26,6 +26,7 @@ class HtmlEditorOptions {
     this.shouldEnsureVisible = false,
     this.spellCheck = false,
     this.customBodyCssStyle = '',
+    this.customInternalCSS = '',
     this.disableDragAndDrop = false,
   });
 
@@ -129,6 +130,9 @@ class HtmlEditorOptions {
 
   /// Set css for body editor
   final String customBodyCssStyle;
+
+  /// Set internal css for html page
+  final String customInternalCSS;
 
   /// Disable drag and drop
   final bool disableDragAndDrop;
