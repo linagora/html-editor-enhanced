@@ -1,3 +1,7 @@
+## [3.1.6] - 2025-04-16
+* Custom internal CSS for editor
+* Remove padding editor
+
 ## [3.1.4] - 2025-03-12
 * Support flutter version `3.24.5`
 * Fix cannot break `quote/code` tag when press Enter key
