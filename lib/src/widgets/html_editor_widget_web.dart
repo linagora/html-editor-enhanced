@@ -821,13 +821,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         if (data['type'].contains('onImageUpload')) {
           try {
             final jsonString = jsonEncode(data['listFileUploaded']);
+            debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: jsonString: $jsonString');
             List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
             final listFileUpload = dataList.map((data) => FileUpload.fromJson(data)).toList();
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: COUNT_FILE_UPLOADED: ${listFileUpload.length}');
-            c.onImageUpload!.call(listFileUpload);
+            c.onImageUpload?.call(listFileUpload);
           } catch (e) {
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: Exception: $e');
-            c.onImageUploadError!.call(null, null, UploadError.jsException);
+            c.onImageUploadError?.call(null, null, UploadError.jsException);
           }
         }
         if (data['type'].contains('onImageUploadError')) {
@@ -844,19 +845,19 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
 
           try {
-
             if (base64 != null) {
-              c.onImageUploadError!.call(null, base64, uploadError);
+              c.onImageUploadError?.call(null, base64, uploadError);
             } else {
               final jsonString = jsonEncode(data['listFileFailed']);
+              debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: jsonString: $jsonString');
               List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
               final listFileUploadFailed = dataList.map((data) => FileUpload.fromJson(data)).toList();
               debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: COUNT_FILE_FAILED: ${listFileUploadFailed.length}');
-              c.onImageUpload!.call(listFileUploadFailed);
+              c.onImageUpload?.call(listFileUploadFailed);
             }
           } catch (e) {
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: Exception: $e');
-            c.onImageUploadError!.call(null, null, uploadError);
+            c.onImageUploadError?.call(null, null, uploadError);
           }
         }
         if (data['type'].contains('onKeyDown')) {
