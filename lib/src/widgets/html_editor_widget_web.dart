@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
-import 'package:html_editor_enhanced/utils/html_editor_utils.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 
@@ -605,9 +604,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         .replaceFirst('<!--customBodyCssStyle-->', widget.htmlEditorOptions.customBodyCssStyle);
 
     if (widget.htmlEditorOptions.cacheHTMLAssetOffline) {
-      final jqueryContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.jqueryAssetPath);
-      final summernoteCSSContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteCSSAssetPath);
-      final summernoteJSContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteJSAssetPath);
+      final contentAssets = await Future.wait([
+        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.jqueryAssetPath),
+        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteCSSAssetPath),
+        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteJSAssetPath),
+      ]);
+      final jqueryContent = contentAssets[0];
+      final summernoteCSSContent = contentAssets[1];
+      final summernoteJSContent = contentAssets[2];
 
       htmlString = htmlString
           .replaceFirst('<script src="jquery.min.js"></script>', '<script>$jqueryContent</script>')
