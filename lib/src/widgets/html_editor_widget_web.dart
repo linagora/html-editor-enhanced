@@ -594,7 +594,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     final filePath = widget.htmlEditorOptions.filePath
         ?? HtmlEditorConstants.summernoteHtmlAssetPath;
 
-    var htmlString = await HtmlEditorUtils().loadAssetAsString(filePath);
+    var htmlString = await HtmlEditorUtils.loadAssetAsString(filePath);
 
     htmlString = htmlString
         .replaceFirst('<!--customInternalCSS-->', widget.htmlEditorOptions.customInternalCSS)
@@ -605,9 +605,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
     if (widget.htmlEditorOptions.cacheHTMLAssetOffline) {
       final contentAssets = await Future.wait([
-        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.jqueryAssetPath),
-        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteCSSAssetPath),
-        HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteJSAssetPath),
+        HtmlEditorUtils.loadAssetAsString(HtmlEditorConstants.jqueryAssetPath),
+        HtmlEditorUtils.loadAssetAsString(HtmlEditorConstants.summernoteCSSAssetPath),
+        HtmlEditorUtils.loadAssetAsString(HtmlEditorConstants.summernoteJSAssetPath),
       ]);
       final jqueryContent = contentAssets[0];
       final summernoteCSSContent = contentAssets[1];

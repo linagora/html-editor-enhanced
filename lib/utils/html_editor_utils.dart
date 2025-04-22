@@ -3,13 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class HtmlEditorUtils {
-  static HtmlEditorUtils? _instance;
+  const HtmlEditorUtils._();
 
-  HtmlEditorUtils._();
-
-  factory HtmlEditorUtils() => _instance ??= HtmlEditorUtils._();
-
-  Future<String> loadAssetAsString(String path) async {
+  static Future<String> loadAssetAsString(String path) async {
     try {
       return rootBundle.loadString(path);
     } catch (e) {
@@ -18,7 +14,7 @@ class HtmlEditorUtils {
     }
   }
 
-  Future<void> loadAsset(String path) async {
+  static Future<void> loadAsset(String path) async {
     try {
       await rootBundle.load(path);
     } catch (e) {
