@@ -28,6 +28,7 @@ class HtmlEditorOptions {
     this.customBodyCssStyle = '',
     this.customInternalCSS = '',
     this.disableDragAndDrop = false,
+    this.cacheHTMLAssetOffline = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -136,6 +137,9 @@ class HtmlEditorOptions {
 
   /// Disable drag and drop
   final bool disableDragAndDrop;
+
+  /// Inject JS/CSS content directly into HTML to support loading assets when in offline mode
+  final bool cacheHTMLAssetOffline;
 }
 
 /// Options that modify the toolbar and its behavior
