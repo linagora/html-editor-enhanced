@@ -4,8 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html_editor_enhanced/utils/html_editor_utils.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 
@@ -591,25 +591,40 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         });
       </script>
     """;
-    var filePath =
-        'packages/html_editor_enhanced/assets/summernote-no-plugins.html';
-    if (widget.htmlEditorOptions.filePath != null) {
-      filePath = widget.htmlEditorOptions.filePath!;
-    }
-    var htmlString = await rootBundle.loadString(filePath);
+
+    final filePath = widget.htmlEditorOptions.filePath
+        ?? HtmlEditorConstants.summernoteHtmlAssetPath;
+
+    var htmlString = await HtmlEditorUtils().loadAssetAsString(filePath);
+
     htmlString = htmlString
         .replaceFirst('<!--customInternalCSS-->', widget.htmlEditorOptions.customInternalCSS)
         .replaceFirst('<!--darkCSS-->', darkCSS)
         .replaceFirst('<!--headString-->', headString)
         .replaceFirst('<!--summernoteScripts-->', summernoteScripts)
-        .replaceFirst('<!--customBodyCssStyle-->',
-            widget.htmlEditorOptions.customBodyCssStyle)
-        .replaceFirst('"jquery.min.js"',
-            '"assets/packages/html_editor_enhanced/assets/jquery.min.js"')
-        .replaceFirst('"summernote-lite.min.css"',
-            '"assets/packages/html_editor_enhanced/assets/summernote-lite.min.css"')
-        .replaceFirst('"summernote-lite.min.js"',
-            '"assets/packages/html_editor_enhanced/assets/summernote-lite-v2.min.js"');
+        .replaceFirst('<!--customBodyCssStyle-->', widget.htmlEditorOptions.customBodyCssStyle);
+
+    if (widget.htmlEditorOptions.cacheHTMLAssetOffline) {
+      final jqueryContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.jqueryAssetPath);
+      final summernoteCSSContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteCSSAssetPath);
+      final summernoteJSContent = await HtmlEditorUtils().loadAssetAsString(HtmlEditorConstants.summernoteJSAssetPath);
+
+      htmlString = htmlString
+          .replaceFirst('<script src="jquery.min.js"></script>', '<script>$jqueryContent</script>')
+          .replaceFirst('<link href="summernote-lite.min.css" rel="stylesheet">', '<style>$summernoteCSSContent</style>')
+          .replaceFirst('<script src="summernote-lite.min.js"></script>', '<script>$summernoteJSContent</script>');
+
+      htmlString = htmlString
+          .replaceAll("url(font/summernote.eot)", "url('${HtmlEditorConstants.summernoteFontEOTAssetPath}')")
+          .replaceAll("url(font/summernote.eot?#iefix)", "url('${HtmlEditorConstants.summernoteFontEOTAssetPath}?#iefix')")
+          .replaceAll("url(font/summernote.ttf)", "url('${HtmlEditorConstants.summernoteFontTTFAssetPath}')");
+    } else {
+      htmlString = htmlString
+          .replaceFirst('"jquery.min.js"', '"${HtmlEditorConstants.jqueryAssetPath}"')
+          .replaceFirst('"summernote-lite.min.css"', '"${HtmlEditorConstants.summernoteCSSAssetPath}"')
+          .replaceFirst('"summernote-lite.min.js"', '"${HtmlEditorConstants.summernoteJSAssetPath}"');
+    }
+
     if (widget.callbacks != null) addJSListener(widget.callbacks!);
 
     final currentContextBC = widget.initBC;
