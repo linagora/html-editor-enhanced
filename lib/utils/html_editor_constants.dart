@@ -1,6 +1,6 @@
 
 class HtmlEditorConstants {
-  HtmlEditorConstants._();
+  const HtmlEditorConstants._();
 
   static const String summernoteHtmlAssetPath = 'packages/html_editor_enhanced/assets/summernote-no-plugins.html';
   static const String jqueryAssetPath = 'packages/html_editor_enhanced/assets/jquery.min.js';
