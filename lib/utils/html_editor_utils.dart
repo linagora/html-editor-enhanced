@@ -17,4 +17,12 @@ class HtmlEditorUtils {
       return '';
     }
   }
+
+  Future<void> loadAsset(String path) async {
+    try {
+      await rootBundle.load(path);
+    } catch (e) {
+      debugPrint('HtmlEditorUtils::loadAsset:Exception = $e');
+    }
+  }
 }
