@@ -22,6 +22,7 @@ class JavascriptUtils {
       } else {
         const signatureContainer = document.createElement('div');
         signatureContainer.setAttribute('class', 'tmail-signature');
+        signatureContainer.style.clear = 'both';
     
         const signatureContent = document.createElement('div');
         signatureContent.setAttribute('class', 'tmail-signature-content');
@@ -47,6 +48,7 @@ class JavascriptUtils {
     } else {
       const signatureContainer = document.createElement('div');
       signatureContainer.setAttribute('class', 'tmail-signature');
+      signatureContainer.style.clear = 'both';
     
       const signatureContent = document.createElement('div');
       signatureContent.setAttribute('class', 'tmail-signature-content');
@@ -97,6 +99,7 @@ class JavascriptUtils {
     if (nodeSignature && signatureContent) {
       signatureContent.className = 'tmail-signature';
       signatureContent.style.display = 'block';
+      signatureContent.style.clear = 'both';
         
       if (nodeSignature.outerHTML) {
         nodeSignature.outerHTML = signatureContent.outerHTML;
