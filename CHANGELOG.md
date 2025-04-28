@@ -1,3 +1,6 @@
+## [3.1.7] - 2025-04-28
+* Upgrade `flutter_inappwebview` version to `6.1.0`
+
 ## [3.1.6] - 2025-04-16
 * Custom internal CSS for editor
 * Remove padding editor
