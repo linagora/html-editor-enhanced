@@ -1,3 +1,6 @@
+## [3.1.8] - 2025-05-06
+* Add `Clear` CSS property for Signature
+
 ## [3.1.7] - 2025-04-28
 * Upgrade `flutter_inappwebview` version to `6.1.0`
 
