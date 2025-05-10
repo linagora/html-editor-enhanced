@@ -1,3 +1,6 @@
+## [3.1.9] - 2025-05-12
+* Custom scripts for body editor
+
 ## [3.1.8] - 2025-05-06
 * Add `Clear` CSS property for Signature
 
