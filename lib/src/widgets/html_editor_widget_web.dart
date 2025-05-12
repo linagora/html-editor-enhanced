@@ -256,6 +256,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           \$('#summernote-2').on('summernote.change', function(_, contents, \$editable) {
             window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contents}), "*");
           });
+          
+          ${widget.htmlEditorOptions.customScriptAfterDocumentLoaded}
         });
        
         window.parent.addEventListener('message', handleMessage, false);
