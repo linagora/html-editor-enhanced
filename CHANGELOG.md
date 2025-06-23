@@ -1,3 +1,6 @@
+## [3.1.9] - 2025-06-24
+* Fix duplicate signature button when inserting image
+
 ## [3.1.8] - 2025-05-06
 * Add `Clear` CSS property for Signature
 
