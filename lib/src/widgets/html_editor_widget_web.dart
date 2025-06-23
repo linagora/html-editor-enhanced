@@ -335,6 +335,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               if (data["type"].includes("insertHtml")) {
                 \$('#summernote-2').summernote('pasteHTML', data["html"]);
               }
+              if (data["type"].includes("insertImage")) {
+                insertImageWithSafeSignature(data["source"]);
+              }
               if (data["type"].includes("insertNetworkImage")) {
                 \$('#summernote-2').summernote('insertImage', data["url"], data["filename"]);
               }
@@ -508,6 +511,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
+        ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}
         
         function onSelectionChange() {
           let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();

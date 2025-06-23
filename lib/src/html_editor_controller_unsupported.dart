@@ -115,6 +115,9 @@ class HtmlEditorController {
   /// Insert a link at the position of the cursor in the editor
   void insertLink(String text, String url, bool isNewWindow) {}
 
+  /// Insert a image at the position of the cursor in the editor
+  void insertImage(String source) {}
+
   /// Insert a network image at the position of the cursor in the editor
   void insertNetworkImage(String url, {String filename = ''}) {}
 

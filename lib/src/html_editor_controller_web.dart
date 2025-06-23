@@ -401,4 +401,12 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void setOnDragDropEvent() {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: onDragDropEvent'});
   }
+
+  @override
+  void insertImage(String source) {
+    _evaluateJavascriptWeb(data: {
+      'type': 'toIframe: insertImage',
+      'source': source,
+    });
+  }
 }
