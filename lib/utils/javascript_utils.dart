@@ -233,4 +233,40 @@ class JavascriptUtils {
           }, 50); // Increase delay to 50ms to allow DOM updates
       }
   ''';
+
+  static const String jsHandleInsertImageWithSafeSignature = '''
+    function insertImageWithSafeSignature(imgSource) {
+      if (!isRangeOutsideSignatureButton()) {
+        const nodeEditor = document.querySelector('.note-editable');
+        if (nodeEditor) {
+          const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+          const imageContainer = document.createElement('div');
+          imageContainer.innerHTML = imgSource;
+          if (signatureNode) {
+            nodeEditor.insertBefore(imageContainer, signatureNode);
+          } else {
+            nodeEditor.appendChild(imageContainer);
+          }
+          return;
+        }
+      }
+      \$('#summernote-2').summernote('pasteHTML', imgSource);
+    }
+    
+    function isRangeOutsideSignatureButton() {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return true;
+    
+        const range = sel.getRangeAt(0);
+        if (!range) return true;
+    
+        const container = range.startContainer;
+        const node = container.nodeType === Node.TEXT_NODE ? container.parentNode : container;
+        return !node.closest('.tmail-signature-button');
+      } catch (error) {
+        return true;
+      }
+    }
+  ''';
 }
