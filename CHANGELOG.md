@@ -1,3 +1,7 @@
+## [3.2.1] - 2025-07-29
+
+- Support flutter version `3.27.4`
+
 ## [3.2.0] - 2025-07-22
 * Fix image inserted below signature on Safari
 
