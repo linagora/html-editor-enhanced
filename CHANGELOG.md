@@ -1,3 +1,6 @@
+## [3.1.10] - 2025-07-14
+* Support flutter version `3.27.4`
+
 ## [3.1.9] - 2025-06-24
 * Fix duplicate signature button when inserting image
 
