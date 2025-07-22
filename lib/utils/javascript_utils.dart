@@ -135,39 +135,16 @@ class JavascriptUtils {
 
   static const String jsDetectBrowser = '''
     function getBrowserName() {
-      // Opera 8.0+
-      if ((window.opr && window.opr.addons)
-        || window.opera
-        || navigator.userAgent.indexOf(' OPR/') >= 0) {
-        return 'Opera';
-      }
+      const ua = navigator.userAgent;
+
+      if (ua.includes('OPR') || ua.includes('Opera')) return 'Opera';
+      if (ua.includes('Edg')) return 'Microsoft Edge';
+      if (ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) return 'Chrome';
+      if (ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) return 'Safari';
+      if (ua.includes('Firefox')) return 'Firefox';
+      if (ua.includes('Trident') || ua.includes('MSIE')) return 'Internet Explorer';
     
-      // Firefox 1.0+
-      if (/Firefox|FxiOS/.test(navigator.userAgent)) {
-        return 'Firefox';
-      }
-    
-      // Safari 3.0+ "[object HTMLElementConstructor]"
-      if (/constructor/i.test(window.HTMLElement) || (function (p) {
-        return p.toString() === '[object SafariRemoteNotification]';
-      })(!window['safari'])) {
-        return 'Safari';
-      }
-    
-      // Internet Explorer 6-11
-      if (/* @cc_on!@*/false || document.documentMode) {
-        return 'Internet Explorer';
-      }
-    
-      // Edge 20+
-      if (!(document.documentMode) && window.StyleMedia) {
-        return 'Microsoft Edge';
-      }
-      
-      // Chrome
-      if (window.chrome) {
-        return 'Chrome';
-      }
+      return 'Unknown';
     }
   ''';
 
@@ -250,7 +227,13 @@ class JavascriptUtils {
           return;
         }
       }
-      \$('#summernote-2').summernote('pasteHTML', imgSource);
+
+      const browserName = getBrowserName();
+      if ((browserName === 'Safari' || browserName === 'Firefox') && !editorHasBeenFocused) {
+        safePasteHTML(imgSource);
+      } else {
+        \$('#summernote-2').summernote('pasteHTML', imgSource);
+      }
     }
     
     function isRangeOutsideSignatureButton() {
@@ -267,6 +250,24 @@ class JavascriptUtils {
       } catch (error) {
         return true;
       }
+    }
+    
+    function safePasteHTML(htmlToInsert) {
+      const nodeEditor = document.querySelector('.note-editable');
+      if (nodeEditor) {
+        const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+        console.log('signatureNode:: signatureNode');
+        const imageContainer = document.createElement('div');
+        imageContainer.innerHTML = htmlToInsert;
+        if (signatureNode) {
+          nodeEditor.insertBefore(imageContainer, signatureNode);
+        } else {
+          nodeEditor.appendChild(imageContainer);
+        }
+        return;
+      }
+      
+      \$('#summernote-2').summernote('pasteHTML', imgSource);
     }
   ''';
 }

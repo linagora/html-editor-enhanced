@@ -240,6 +240,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     }
     var summernoteScripts = """
       <script type="text/javascript">
+        let editorHasBeenFocused = false;
+      
         \$(document).ready(function () {
           \$('#summernote-2').summernote({
             placeholder: "${widget.htmlEditorOptions.hint}",
@@ -255,6 +257,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           
           \$('#summernote-2').on('summernote.change', function(_, contents, \$editable) {
             window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contents}), "*");
+          });
+          
+          \$('#summernote-2').on('summernote.focus', function() {
+            editorHasBeenFocused = true;
           });
         });
        
