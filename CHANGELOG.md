@@ -1,3 +1,6 @@
+## [3.2.0] - 2025-07-22
+* Fix image inserted below signature on Safari
+
 ## [3.1.9] - 2025-06-24
 * Fix duplicate signature button when inserting image
 
