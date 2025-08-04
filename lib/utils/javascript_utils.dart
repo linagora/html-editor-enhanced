@@ -270,4 +270,48 @@ class JavascriptUtils {
       \$('#summernote-2').summernote('pasteHTML', imgSource);
     }
   ''';
+
+  static const String jsHandleNormalizeHtmlTextWhenDropping = '''
+    let noteEditor = document.getElementsByClassName('note-editor')[0];
+    if (noteEditor) {
+      noteEditor.addEventListener("drop", function(event) {
+        let types = event.dataTransfer.types;
+        if (types.includes("text/html")) {
+          try {
+            const dataTransfer = (event.originalEvent || event).dataTransfer;
+            const htmlData = dataTransfer.getData('text/html');
+            if (!htmlData) return;
+             
+            event.preventDefault();
+            
+            const x = event.clientX;
+            const y = event.clientY;
+      
+            noteEditor.focus();
+      
+            let range;
+            if (document.caretRangeFromPoint) {
+              range = document.caretRangeFromPoint(x, y);
+            } else if (document.caretPositionFromPoint) {
+              const pos = document.caretPositionFromPoint(x, y);
+              range = document.createRange();
+              range.setStart(pos.offsetNode, pos.offset);
+            }
+      
+            if (range) {
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+      
+            setTimeout(() => {
+              document.execCommand("insertHTML", false, htmlData);
+            }, 0);
+          } catch (error) {
+            console.error('[Drop Handler] Error during drop handling:', error);
+          }
+        }
+      });
+    }
+  ''';
 }
