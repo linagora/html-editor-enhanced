@@ -29,6 +29,7 @@ class HtmlEditorOptions {
     this.customInternalCSS = '',
     this.disableDragAndDrop = false,
     this.cacheHTMLAssetOffline = false,
+    this.normalizeHtmlTextWhenPasting = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -140,6 +141,9 @@ class HtmlEditorOptions {
 
   /// Inject JS/CSS content directly into HTML to support loading assets when in offline mode
   final bool cacheHTMLAssetOffline;
+
+  /// Normalize HTML text when pasting
+  final bool normalizeHtmlTextWhenPasting;
 }
 
 /// Options that modify the toolbar and its behavior
