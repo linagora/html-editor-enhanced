@@ -30,6 +30,7 @@ class HtmlEditorOptions {
     this.disableDragAndDrop = false,
     this.cacheHTMLAssetOffline = false,
     this.normalizeHtmlTextWhenPasting = false,
+    this.normalizeHtmlTextWhenDropping = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -144,6 +145,9 @@ class HtmlEditorOptions {
 
   /// Normalize HTML text when pasting
   final bool normalizeHtmlTextWhenPasting;
+
+  /// Normalize HTML text when dropping
+  final bool normalizeHtmlTextWhenDropping;
 }
 
 /// Options that modify the toolbar and its behavior

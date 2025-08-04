@@ -276,6 +276,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           \$('#summernote-2').on('summernote.focus', function() {
             editorHasBeenFocused = true;
           });
+          
+          ${widget.htmlEditorOptions.normalizeHtmlTextWhenDropping ? JavascriptUtils.jsHandleNormalizeHtmlTextWhenDropping: ''}
         });
        
         window.parent.addEventListener('message', handleMessage, false);
