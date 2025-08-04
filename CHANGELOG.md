@@ -1,3 +1,7 @@
+## [3.2.2] - 2025-08-04
+
+- Fix `line-height` is auto changed when copy/paste or drag/drop text from `odt` file
+
 ## [3.2.1] - 2025-07-29
 
 - Support flutter version `3.27.4`
