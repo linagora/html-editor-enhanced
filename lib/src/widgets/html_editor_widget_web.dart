@@ -215,6 +215,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             """;
       }
     }
+
+    if (widget.htmlEditorOptions.normalizeHtmlTextWhenPasting) {
+      summernoteCallbacks =
+          '''$summernoteCallbacks        onPaste: function (e) {
+                const clipboardData = (e.originalEvent || e).clipboardData || window.clipboardData;
+                const htmlData = clipboardData.getData('text/html');
+                if (htmlData) {
+                  e.preventDefault();
+                  document.execCommand("insertHTML", false, htmlData);
+                }
+              },
+        ''';
+    }
+
     summernoteCallbacks = '$summernoteCallbacks}';
     var darkCSS = '';
     if ((Theme.of(widget.initBC).brightness == Brightness.dark ||
