@@ -482,7 +482,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               }
               
               if (data["type"].includes("insertSignature")) {
-                ${JavascriptUtils.jsHandleInsertSignature}
+                ${JavascriptUtils.jsHandleInsertSignature(createdViewId)}
                
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
@@ -530,7 +530,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
         }
         
-        ${JavascriptUtils.jsHandleCreateSignature}
+        ${JavascriptUtils.jsHandleCreateSignature(createdViewId)}
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
@@ -937,6 +937,16 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         if (data['type'].contains('onDragLeave') && c.onDragLeave != null) {
           c.onDragLeave!.call(data['types']);
+        }
+        if (data['type'].contains('onSignatureHoverIn') && c.onSignatureHoverIn != null) {
+          try {
+            final signaturePosition = SignaturePosition.fromJson(data);
+            final isContentVisible = data['isContentVisible'];
+            c.onSignatureHoverIn!(signaturePosition, isContentVisible);
+          } catch (_) {}
+        }
+        if (data['type'].contains('onSignatureHoverOut') && c.onSignatureHoverOut != null) {
+          c.onSignatureHoverOut!();
         }
       }
 
