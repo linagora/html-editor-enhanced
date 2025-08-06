@@ -1,43 +1,20 @@
-
-import 'package:html_editor_enhanced/utils/icon_utils.dart';
-
 class JavascriptUtils {
   const JavascriptUtils._();
 
   static const String jsHandleInsertSignature = '''
     const signatureNode = document.querySelector('.note-editable > .tmail-signature');
+    const signatureHtml = data['signature'];
+    
     if (signatureNode) {
       const currentSignatureContent = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
       const currentSignatureButton = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-button');
     
       if (currentSignatureContent && currentSignatureButton) {
-        currentSignatureContent.innerHTML = data['signature'];
+        currentSignatureContent.innerHTML = signatureHtml;
         currentSignatureButton.contentEditable = "false";
         currentSignatureButton.setAttribute('onclick', 'handleOnClickSignature()');
-        if (currentSignatureContent.style.display === 'none') {
-         currentSignatureButton.style.backgroundImage = `${IconUtils.chevronDownSVGIconUrlEncoded}`;
-       } else {
-         currentSignatureButton.style.backgroundImage = `${IconUtils.chevronUpSVGIconUrlEncoded}`;
-       }
       } else {
-        const signatureContainer = document.createElement('div');
-        signatureContainer.setAttribute('class', 'tmail-signature');
-        signatureContainer.style.clear = 'both';
-    
-        const signatureContent = document.createElement('div');
-        signatureContent.setAttribute('class', 'tmail-signature-content');
-        signatureContent.innerHTML = data['signature'];
-        signatureContent.style.display = 'none';
-    
-        const signatureButton = document.createElement('button');
-        signatureButton.setAttribute('class', 'tmail-signature-button');
-        signatureButton.textContent = 'Signature';
-        signatureButton.contentEditable = "false";
-        signatureButton.style.backgroundImage = `${IconUtils.chevronDownSVGIconUrlEncoded}`;
-        signatureButton.setAttribute('onclick', 'handleOnClickSignature()');
-    
-        signatureContainer.appendChild(signatureButton);
-        signatureContainer.appendChild(signatureContent);
+        const signatureContainer = createSignatureElement(signatureHtml);
     
         if (signatureNode.outerHTML) {
           signatureNode.outerHTML = signatureContainer.outerHTML;
@@ -46,24 +23,7 @@ class JavascriptUtils {
         }
       }
     } else {
-      const signatureContainer = document.createElement('div');
-      signatureContainer.setAttribute('class', 'tmail-signature');
-      signatureContainer.style.clear = 'both';
-    
-      const signatureContent = document.createElement('div');
-      signatureContent.setAttribute('class', 'tmail-signature-content');
-      signatureContent.innerHTML = data['signature'];
-      signatureContent.style.display = 'none';
-    
-      const signatureButton = document.createElement('button');
-      signatureButton.setAttribute('class', 'tmail-signature-button');
-      signatureButton.textContent = 'Signature';
-      signatureButton.contentEditable = "false";
-      signatureButton.style.backgroundImage = `${IconUtils.chevronDownSVGIconUrlEncoded}`;
-      signatureButton.setAttribute('onclick', 'handleOnClickSignature()');
-    
-      signatureContainer.appendChild(signatureButton);
-      signatureContainer.appendChild(signatureContent);
+      const signatureContainer = createSignatureElement(signatureHtml);
     
       const nodeEditor = document.querySelector('.note-editable');
       if (nodeEditor) {
@@ -122,15 +82,48 @@ class JavascriptUtils {
      const contentElement = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
      const buttonElement = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-button');
      if (contentElement && buttonElement) {
-       if (contentElement.style.display === 'block') {
-         contentElement.style.display = 'none';
-         buttonElement.style.backgroundImage = `${IconUtils.chevronDownSVGIconUrlEncoded}`;
-       } else {
-         contentElement.style.display = 'block';
-         buttonElement.style.backgroundImage = `${IconUtils.chevronUpSVGIconUrlEncoded}`;
-       }
+        contentElement.style.display = contentElement.style.display === 'block' ? 'none' : 'block';
      }
    }
+  ''';
+
+  static const String jsHandleCreateSignature = '''
+   function createSignatureElement(signatureHtml) {
+      const signatureContainer = document.createElement("div");
+      signatureContainer.className = "tmail-signature";
+      signatureContainer.style.clear = "both";
+    
+      const signatureContent = document.createElement("div");
+      signatureContent.className = "tmail-signature-content";
+      signatureContent.innerHTML = signatureHtml;
+      signatureContent.style.display = "none";
+    
+      const signatureButton = document.createElement("div");
+      signatureButton.className = "tmail-signature-button";
+      signatureButton.contentEditable = "false";
+      signatureButton.setAttribute("onclick", "handleOnClickSignature()");
+    
+      const signatureButtonThreeDots = document.createElement("button");
+      signatureButtonThreeDots.className = "tmail-signature-button-three-dots";
+    
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement("div");
+        dot.className = "tmail-signature-button-dot";
+        signatureButtonThreeDots.appendChild(dot);
+      }
+    
+      const signatureButtonToolTip = document.createElement("div");
+      signatureButtonToolTip.className = "tmail-signature-button-tooltip";
+      signatureButtonToolTip.textContent = "Show signature";
+    
+      signatureButton.appendChild(signatureButtonThreeDots);
+      signatureButton.appendChild(signatureButtonToolTip);
+    
+      signatureContainer.appendChild(signatureButton);
+      signatureContainer.appendChild(signatureContent);
+      
+      return signatureContainer;
+    }
   ''';
 
   static const String jsDetectBrowser = '''
@@ -256,7 +249,6 @@ class JavascriptUtils {
       const nodeEditor = document.querySelector('.note-editable');
       if (nodeEditor) {
         const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
-        console.log('signatureNode:: signatureNode');
         const imageContainer = document.createElement('div');
         imageContainer.innerHTML = htmlToInsert;
         if (signatureNode) {

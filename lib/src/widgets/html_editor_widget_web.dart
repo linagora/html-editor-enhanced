@@ -530,6 +530,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
         }
         
+        ${JavascriptUtils.jsHandleCreateSignature}
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
