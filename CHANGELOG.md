@@ -1,3 +1,8 @@
+## [3.2.3] - 2025-08-07
+
+- Display a three-dot (⋯) icon for signature options
+- Add a hover state to the three-dot (⋯) signature menu
+
 ## [3.2.1] - 2025-07-29
 
 - Support flutter version `3.27.4`
