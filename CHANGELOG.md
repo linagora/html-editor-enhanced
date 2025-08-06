@@ -1,3 +1,8 @@
+## [3.2.3] - 2025-08-07
+
+- Display a three-dot (⋯) icon for signature options
+- Add a hover state to the three-dot (⋯) signature menu
+
 ## [3.2.2] - 2025-08-04
 
 - Fix `line-height` is auto changed when copy/paste or drag/drop text from `odt` file
