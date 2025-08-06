@@ -1570,30 +1570,3 @@ pre {
   background-color: #55687D;
   border-radius: 50%;
 }
-
-.tmail-signature-button-tooltip {
-  visibility: hidden;
-  opacity: 0;
-  background-color: #4D4D4D;
-  color: #FFFFFF;
-  font-family: Inter;
-  font-weight: 600;
-  font-size: 12px;
-  line-height: 20px;
-  letter-spacing: 0px;
-  padding: 2px 6px 2px 6px;
-  border-radius: 10px;
-  position: absolute;
-  top: 130%;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  transition: opacity 0.3s;
-  z-index: 10;
-  box-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.16), 0 0 2px 0 rgba(0, 0, 0, 0.08);
-}
-
-.tmail-signature-button:hover .tmail-signature-button-tooltip {
-  visibility: visible;
-  opacity: 1;
-}

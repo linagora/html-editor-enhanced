@@ -30,6 +30,8 @@ class Callbacks {
     this.onDragOver,
     this.onDragLeave,
     this.onInitialTextLoadComplete,
+    this.onSignatureHoverIn,
+    this.onSignatureHoverOut,
   });
 
   /// Called before certain commands are fired and the editor is in rich text view.
@@ -200,4 +202,10 @@ class Callbacks {
   void Function(List<dynamic>? types)? onDragLeave;
 
   void Function(String initialText)? onInitialTextLoadComplete;
+
+  /// Called whenever the mouse hovers over a signature.
+  void Function(SignaturePosition position, bool isContentVisible)? onSignatureHoverIn;
+
+  /// Called whenever the mouse hovers out of a signature.
+  void Function()? onSignatureHoverOut;
 }
