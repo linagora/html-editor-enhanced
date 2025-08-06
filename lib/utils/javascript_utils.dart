@@ -1,7 +1,7 @@
 class JavascriptUtils {
   const JavascriptUtils._();
 
-  static const String jsHandleInsertSignature = '''
+  static String jsHandleInsertSignature(String viewId) => '''
     const signatureNode = document.querySelector('.note-editable > .tmail-signature');
     const signatureHtml = data['signature'];
     
@@ -13,6 +13,8 @@ class JavascriptUtils {
         currentSignatureContent.innerHTML = signatureHtml;
         currentSignatureButton.contentEditable = "false";
         currentSignatureButton.setAttribute('onclick', 'handleOnClickSignature()');
+        currentSignatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
+        currentSignatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
       } else {
         const signatureContainer = createSignatureElement(signatureHtml);
     
@@ -87,7 +89,7 @@ class JavascriptUtils {
    }
   ''';
 
-  static const String jsHandleCreateSignature = '''
+  static String jsHandleCreateSignature(String viewId) => '''
    function createSignatureElement(signatureHtml) {
       const signatureContainer = document.createElement("div");
       signatureContainer.className = "tmail-signature";
@@ -102,6 +104,8 @@ class JavascriptUtils {
       signatureButton.className = "tmail-signature-button";
       signatureButton.contentEditable = "false";
       signatureButton.setAttribute("onclick", "handleOnClickSignature()");
+      signatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
+      signatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
     
       const signatureButtonThreeDots = document.createElement("button");
       signatureButtonThreeDots.className = "tmail-signature-button-three-dots";
@@ -112,17 +116,59 @@ class JavascriptUtils {
         signatureButtonThreeDots.appendChild(dot);
       }
     
-      const signatureButtonToolTip = document.createElement("div");
-      signatureButtonToolTip.className = "tmail-signature-button-tooltip";
-      signatureButtonToolTip.textContent = "Show signature";
-    
       signatureButton.appendChild(signatureButtonThreeDots);
-      signatureButton.appendChild(signatureButtonToolTip);
     
       signatureContainer.appendChild(signatureButton);
       signatureContainer.appendChild(signatureContent);
       
       return signatureContainer;
+    }
+    
+    function getAbsolutePosition(element) {
+      const rect = element.getBoundingClientRect();
+      const iframeRect = window.frameElement?.getBoundingClientRect() || { top: 0, left: 0 };
+      return {
+        top: rect.top + iframeRect.top + window.parent.scrollY,
+        left: rect.left + iframeRect.left + window.parent.scrollX,
+        width: rect.width,
+        height: rect.height
+      };
+    }
+    
+    function isSignatureContentVisible() {
+      const contentElement = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
+      if (contentElement) {
+        return contentElement.style.display === 'block';
+      } else {
+        return false;
+      }
+    }
+    
+    function handleSignatureHoverIn(element) {
+      try {
+        const position = getAbsolutePosition(element);
+        const isContentVisible = isSignatureContentVisible();
+        const payload = {
+          view: '$viewId',
+          type: 'toDart: onSignatureHoverIn',
+          top: position.top,
+          left: position.left,
+          width: position.width,
+          height: position.height,
+          isContentVisible: isContentVisible
+        };
+        window.parent.postMessage(JSON.stringify(payload), "*");
+      } catch (error) {}
+    }
+    
+    function handleSignatureHoverOut(element) {
+      try {
+        const payload = {
+          view: '$viewId',
+          type: 'toDart: onSignatureHoverOut'
+        };
+        window.parent.postMessage(JSON.stringify(payload), "*");
+      } catch (error) {}
     }
   ''';
 
