@@ -255,7 +255,7 @@ class JavascriptUtils {
       if (!isRangeOutsideSignatureButton()) {
         const nodeEditor = document.querySelector('.note-editable');
         if (nodeEditor) {
-          const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+          const signatureNode = document.querySelector('.note-editable > .tmail-signature');
           const imageContainer = document.createElement('div');
           imageContainer.innerHTML = imgSource;
           if (signatureNode) {
@@ -294,7 +294,7 @@ class JavascriptUtils {
     function safePasteHTML(htmlToInsert) {
       const nodeEditor = document.querySelector('.note-editable');
       if (nodeEditor) {
-        const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+        const signatureNode = document.querySelector('.note-editable > .tmail-signature');
         const imageContainer = document.createElement('div');
         imageContainer.innerHTML = htmlToInsert;
         if (signatureNode) {
