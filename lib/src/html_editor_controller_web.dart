@@ -10,38 +10,6 @@ import 'package:meta/meta.dart';
 
 /// Controller for web
 class HtmlEditorController extends unsupported.HtmlEditorController {
-  HtmlEditorController({
-    this.processInputHtml = true,
-    this.processNewLineAsBr = false,
-    this.processOutputHtml = true,
-  });
-
-  /// Toolbar widget state to call various methods. For internal use only.
-  @override
-  ToolbarWidgetState? toolbar;
-
-  /// Determines whether text processing should happen on input HTML, e.g.
-  /// whether a new line should be converted to a <br>.
-  ///
-  /// The default value is true.
-  @override
-  final bool processInputHtml;
-
-  /// Determines whether newlines (\n) should be written as <br>. This is not
-  /// recommended for HTML documents.
-  ///
-  /// The default value is false.
-  @override
-  final bool processNewLineAsBr;
-
-  /// Determines whether text processing should happen on output HTML, e.g.
-  /// whether <p><br></p> is returned as "". For reference, Summernote uses
-  /// that HTML as the default HTML (when no text is in the editor).
-  ///
-  /// The default value is true.
-  @override
-  final bool processOutputHtml;
-
   /// Manages the view ID for the [HtmlEditorController] on web
   String? _viewId;
 
@@ -62,7 +30,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
         (text.isEmpty ||
             text == '<p></p>' ||
             text == '<p><br></p>' ||
-            text == '<p><br/></p>')) text = '';
+            text == '<p><br/></p>')) {
+      text = '';
+    }
     return text;
   }
 
@@ -77,7 +47,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
         (text.isEmpty ||
             text == '<p></p>' ||
             text == '<p><br></p>' ||
-            text == '<p><br/></p>')) text = '';
+            text == '<p><br/></p>')) {
+      text = '';
+    }
     return text;
   }
 
@@ -338,7 +310,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       _evaluateJavascriptWeb(data: {
         'type': 'toIframe: addNotification',
         'html': html,
-        'alertType': 'alert alert-${describeEnum(notificationType)}'
+        'alertType': 'alert alert-${notificationType.name}'
       });
     }
     recalculateHeight();

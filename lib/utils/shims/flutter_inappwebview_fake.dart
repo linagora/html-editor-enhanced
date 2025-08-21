@@ -175,7 +175,7 @@ class UserScriptInjectionTime {
   static const AT_DOCUMENT_END = UserScriptInjectionTime._internal(1);
 
   @override
-  bool operator ==(value) => value == _value;
+  bool operator ==(other) => other == _value;
 
   @override
   int get hashCode => _value.hashCode;

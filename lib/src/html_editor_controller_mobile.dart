@@ -7,38 +7,6 @@ import 'package:html_editor_enhanced/src/html_editor_controller_unsupported.dart
 
 /// Controller for mobile
 class HtmlEditorController extends unsupported.HtmlEditorController {
-  HtmlEditorController({
-    this.processInputHtml = true,
-    this.processNewLineAsBr = false,
-    this.processOutputHtml = true,
-  });
-
-  /// Toolbar widget state to call various methods. For internal use only.
-  @override
-  ToolbarWidgetState? toolbar;
-
-  /// Determines whether text processing should happen on input HTML, e.g.
-  /// whether a new line should be converted to a <br>.
-  ///
-  /// The default value is false.
-  @override
-  final bool processInputHtml;
-
-  /// Determines whether newlines (\n) should be written as <br>. This is not
-  /// recommended for HTML documents.
-  ///
-  /// The default value is false.
-  @override
-  final bool processNewLineAsBr;
-
-  /// Determines whether text processing should happen on output HTML, e.g.
-  /// whether <p><br></p> is returned as "". For reference, Summernote uses
-  /// that HTML as the default HTML (when no text is in the editor).
-  ///
-  /// The default value is true.
-  @override
-  final bool processOutputHtml;
-
   /// Manages the [InAppWebViewController] for the [HtmlEditorController]
   InAppWebViewController? _editorController;
 
@@ -73,7 +41,9 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
             text.isEmpty ||
             text == '<p></p>' ||
             text == '<p><br></p>' ||
-            text == '<p><br/></p>')) text = '';
+            text == '<p><br/></p>')) {
+      text = '';
+    }
     return text ?? '';
   }
 
@@ -228,7 +198,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void addNotification(String html, NotificationType notificationType) async {
     await _evaluateJavascript(source: """
         \$('.note-status-output').html(
-          '<div class="alert alert-${describeEnum(notificationType)}">$html</div>'
+          '<div class="alert alert-${notificationType.name}">$html</div>'
         );
         """);
     recalculateHeight();
