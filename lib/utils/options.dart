@@ -31,6 +31,9 @@ class HtmlEditorOptions {
     this.cacheHTMLAssetOffline = false,
     this.normalizeHtmlTextWhenPasting = false,
     this.normalizeHtmlTextWhenDropping = false,
+    this.useDefaultFontSize = true,
+    this.defaultFontSize = 16.0,
+    this.defaultLineHeight = 24.0,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -148,6 +151,15 @@ class HtmlEditorOptions {
 
   /// Normalize HTML text when dropping
   final bool normalizeHtmlTextWhenDropping;
+
+  /// Use default font size
+  final bool useDefaultFontSize;
+
+  /// Default font size
+  final double defaultFontSize;
+
+  /// Default line height
+  final double defaultLineHeight;
 }
 
 /// Options that modify the toolbar and its behavior

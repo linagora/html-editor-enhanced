@@ -187,8 +187,9 @@ class JavascriptUtils {
     }
   ''';
 
-  static const String jsHandleSetFontSize = '''
-    var activeFontSize = 15;
+  static String jsHandleSetFontSize(double defaultFontSizePx) => '''
+    var activeFontSize = `$defaultFontSizePx`;
+
     var style = document.createElement("style");
     document.body.appendChild(style);
 
@@ -222,6 +223,35 @@ class JavascriptUtils {
     \$('#summernote-2').on('summernote.keyup', function(_, e) {
       updateTags();
     });
+  ''';
+
+  static String jsHandleSetupDefaultFontSize(
+    double defaultFontSizePx,
+    double defaultLineHeightPx,
+  ) => '''
+    const ratio = `${defaultLineHeightPx / defaultFontSizePx}`;
+    
+    function calcLineHeightPx(fontSize) {
+      return Math.round(fontSize * ratio);
+    }
+    
+    function normalizeFontAndLineHeight(editable) {
+      const elements = editable.querySelectorAll("[style*='font-size']");
+      elements.forEach(element => {
+        const fontSize = parseInt(element.style.fontSize);
+        if (fontSize) {
+          element.style.lineHeight = calcLineHeightPx(fontSize) + "px";
+        }
+      });
+      
+      // Heading block
+      editable.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach(h => {
+        const size = parseInt(window.getComputedStyle(h).fontSize);
+        if (size && !h.style.lineHeight) {
+          h.style.lineHeight = calcLineHeightPx(size) + "px";
+        }
+      });
+    }
   ''';
 
   static const String jsHandleOnKeyDown = '''

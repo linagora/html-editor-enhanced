@@ -870,8 +870,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                           _actualFontSizeSelectedItem = 48;
                           break;
                       }
-                      widget.controller.execCommand('fontSize',
-                          argument: changed.toString());
+                      widget.controller.setFontSize(_actualFontSizeSelectedItem.toInt());
                       updateSelectedItem(changed);
                     }
                   }

@@ -86,6 +86,50 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   void initSummernote() async {
     var headString = '';
     var summernoteCallbacks = '''callbacks: {
+        ${widget.htmlEditorOptions.useDefaultFontSize
+          ? '''
+              onInit: function() {
+                const editor = document.querySelector('.note-editable');
+                if (!editor) return;
+                
+                editor.style.fontSize = "${widget.htmlEditorOptions.defaultFontSize}px";
+                editor.style.lineHeight = calcLineHeightPx(`${widget.htmlEditorOptions.defaultFontSize}`) + "px";
+              },
+              onChange: function(contents, \$editable) {
+                normalizeFontAndLineHeight(\$editable[0]);
+              },
+              onKeyup: function(e) {
+                if (e.which === 13) {
+                  setTimeout(() => {
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    let node = sel.anchorNode;
+          
+                    if (node.nodeType === 3) {
+                      node = node.parentNode;
+                    }
+                    
+                    if (node) {
+                      if (node.style) {
+                        node.style.removeProperty("line-height");
+                        if (node.getAttribute("style") === "") {
+                          node.removeAttribute("style");
+                        }
+                      }
+              
+                      const parent = node.parentElement;
+                      if (parent && parent.style) {
+                        parent.style.removeProperty("line-height");
+                        if (parent.getAttribute("style") === "") {
+                          parent.removeAttribute("style");
+                        }
+                      }
+                    }
+                  }, 0);
+                }
+              },
+            '''
+          : ''}
         onKeydown: function(e) {
             var chars = \$(".note-editable").text();
             var totalChars = chars.length;
@@ -533,7 +577,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ${JavascriptUtils.jsHandleCreateSignature(createdViewId)}
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
-        ${JavascriptUtils.jsHandleSetFontSize}
+        ${widget.htmlEditorOptions.useDefaultFontSize
+          ? JavascriptUtils.jsHandleSetupDefaultFontSize(widget.htmlEditorOptions.defaultFontSize, widget.htmlEditorOptions.defaultLineHeight)
+          : ''}
+        ${JavascriptUtils.jsHandleSetFontSize(widget.htmlEditorOptions.defaultFontSize)}
         ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}
         
         function onSelectionChange() {
