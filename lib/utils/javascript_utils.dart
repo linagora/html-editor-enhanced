@@ -206,14 +206,11 @@ class JavascriptUtils {
     }
     
     function updateTags() {
-      var nodeEditor = document.querySelector('.note-editable');
-      var fontElements = nodeEditor.getElementsByTagName("font");
-      for (var i = 0, len = fontElements.length; i < len; ++i) {
-        if (fontElements[i].size == "7") {
-          fontElements[i].removeAttribute("size");
-          fontElements[i].style.fontSize = activeFontSize + "px";
-        }
-      }
+      var fontElements = document.querySelectorAll('.note-editable font[size="7"]');
+      fontElements.forEach(function(fontEl) {
+        fontEl.removeAttribute("size");
+        fontEl.style.fontSize = activeFontSize + "px";
+      });
     }
     
     function createStyle() {
@@ -236,21 +233,48 @@ class JavascriptUtils {
     }
     
     function normalizeFontAndLineHeight(editable) {
-      const elements = editable.querySelectorAll("[style*='font-size']");
-      elements.forEach(element => {
+      editable.querySelectorAll("[style*='font-size']").forEach(element => {
         const fontSize = parseInt(element.style.fontSize);
         if (fontSize) {
           element.style.lineHeight = calcLineHeightPx(fontSize) + "px";
         }
       });
-      
-      // Heading block
-      editable.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach(h => {
-        const size = parseInt(window.getComputedStyle(h).fontSize);
-        if (size && !h.style.lineHeight) {
-          h.style.lineHeight = calcLineHeightPx(size) + "px";
+    }
+
+    function normalizeAllHeaderStyle(headerTag) {
+      const nodeEditable = document.querySelector('.note-editable');
+      if (nodeEditable) {
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(headerTag)) {
+          nodeEditable.querySelectorAll(headerTag).forEach(element => {
+            const size = parseInt(window.getComputedStyle(element).fontSize);
+    
+            if (size && !element.style.lineHeight) {
+              element.style.lineHeight = calcLineHeightPx(size) + "px";
+            }
+    
+            element.querySelectorAll("*").forEach(child => {
+              if (child.style) {
+                child.style.removeProperty("line-height");
+                child.style.removeProperty("font-size");
+    
+                if (child.getAttribute("style") === "") {
+                  child.removeAttribute("style");
+                }
+              }
+            });
+          });
+        } else {
+          nodeEditable.querySelectorAll(headerTag).forEach(element => {
+            if (element.style) {
+              element.style.removeProperty("line-height");
+
+              if (element.getAttribute("style") === "") {
+                element.removeAttribute("style");
+              }
+            }
+          });
         }
-      });
+      }
     }
   ''';
 

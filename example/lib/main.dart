@@ -33,6 +33,19 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
   String result = '';
   final HtmlEditorController controller = HtmlEditorController();
 
+  static const String initialText = '''
+    <div><br><br></div>
+  ''';
+
+  static const String customInternalCSS = '''
+    <style>
+      p {
+        margin: 0;
+      }
+    </style>
+  ''';
+
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -73,7 +86,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                 htmlEditorOptions: const HtmlEditorOptions(
                   hint: 'Your text here...',
                   shouldEnsureVisible: true,
-                  //initialText: "<p>text content initial, if any</p>",
+                  initialText: initialText,
+                  customInternalCSS: customInternalCSS,
                 ),
                 htmlToolbarOptions: HtmlToolbarOptions(
                   toolbarPosition: ToolbarPosition.aboveEditor, //by default

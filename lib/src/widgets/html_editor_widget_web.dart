@@ -110,18 +110,23 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                     }
                     
                     if (node) {
-                      if (node.style) {
+                      if (node.tagName === "FONT" && node.style) {
                         node.style.removeProperty("line-height");
                         if (node.getAttribute("style") === "") {
                           node.removeAttribute("style");
                         }
-                      }
-              
-                      const parent = node.parentElement;
-                      if (parent && parent.style) {
-                        parent.style.removeProperty("line-height");
-                        if (parent.getAttribute("style") === "") {
-                          parent.removeAttribute("style");
+
+                        const parent = node.parentElement;
+                        if (parent && parent.tagName === "FONT") {
+                          parent.remove();
+                        }
+                      } else {
+                        const parent = node.parentElement;
+                        if (parent && parent.tagName === "FONT" && parent.style) {
+                          parent.style.removeProperty("line-height");
+                          if (parent.getAttribute("style") === "") {
+                            parent.removeAttribute("style");
+                          }
                         }
                       }
                     }
@@ -434,23 +439,29 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 \$('.note-status-output').empty();
               }
               if (data["type"].includes("execCommand")) {
-                var commandType = data["command"];
+                const commandType = data["command"];
+                const argument = data["argument"];
+
                 if (commandType === "hiliteColor") {
-                  if (data["argument"] === null) {
+                  if (argument === null) {
                     if (!document.execCommand("hiliteColor", false)) {
                       document.execCommand("backColor", false);
                     }
                   } else {
-                    if (!document.execCommand("hiliteColor", false, data["argument"])) {
-                      document.execCommand("backColor", false, data["argument"]);
+                    if (!document.execCommand("hiliteColor", false, argument)) {
+                      document.execCommand("backColor", false, argument);
                     }
                   }
                 } else {
-                  if (data["argument"] === null) {
+                  if (argument === null) {
                     document.execCommand(commandType, false);
                   } else {
-                    document.execCommand(commandType, false, data["argument"]);
+                    document.execCommand(commandType, false, argument);
                   }
+                }
+
+                if (commandType === "formatBlock") {
+                  normalizeAllHeaderStyle(argument);
                 }
               }
               if (data["type"].includes("execSummernoteAPI")) {
@@ -460,6 +471,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                   \$('#summernote-2').summernote(nameAPI);
                 } else {
                   \$('#summernote-2').summernote(nameAPI, value);
+                }
+                if (['formatPara', 'formatH1', 'formatH2', 'formatH3', 'formatH4', 'formatH5', 'formatH6'].includes(nameAPI)) {
+                  normalizeAllHeaderStyle(value);
                 }
               }
               if (data["type"].includes("setFontSize")) {
