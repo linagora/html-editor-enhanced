@@ -128,10 +128,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                       }
                       
                       if (node.style) {
-                        const lh = element.style.lineHeight;
+                        const lh = node.style.lineHeight;
                         const currentLineHeight = calcLineHeightPx(activeFontSize) + "px";
                         if (lh !== currentLineHeight) {
-                          element.style.lineHeight = currentLineHeight + "px";
+                          node.style.lineHeight = currentLineHeight;
                         }
                       }
 
