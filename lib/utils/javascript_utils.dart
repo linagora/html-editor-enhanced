@@ -187,8 +187,9 @@ class JavascriptUtils {
     }
   ''';
 
-  static const String jsHandleSetFontSize = '''
-    var activeFontSize = 15;
+  static String jsHandleSetFontSize(double defaultFontSizePx) => '''
+    var activeFontSize = `$defaultFontSizePx`;
+
     var style = document.createElement("style");
     document.body.appendChild(style);
 
@@ -205,14 +206,11 @@ class JavascriptUtils {
     }
     
     function updateTags() {
-      var nodeEditor = document.querySelector('.note-editable');
-      var fontElements = nodeEditor.getElementsByTagName("font");
-      for (var i = 0, len = fontElements.length; i < len; ++i) {
-        if (fontElements[i].size == "7") {
-          fontElements[i].removeAttribute("size");
-          fontElements[i].style.fontSize = activeFontSize + "px";
-        }
-      }
+      var fontElements = document.querySelectorAll('.note-editable font[size="7"]');
+      fontElements.forEach(function(fontEl) {
+        fontEl.removeAttribute("size");
+        fontEl.style.fontSize = activeFontSize + "px";
+      });
     }
     
     function createStyle() {
@@ -222,6 +220,62 @@ class JavascriptUtils {
     \$('#summernote-2').on('summernote.keyup', function(_, e) {
       updateTags();
     });
+  ''';
+
+  static String jsHandleSetupDefaultFontSize(
+    double defaultFontSizePx,
+    double defaultLineHeightPx,
+  ) => '''
+    const ratio = `${defaultLineHeightPx / defaultFontSizePx}`;
+    
+    function calcLineHeightPx(fontSize) {
+      return Math.round(fontSize * ratio);
+    }
+    
+    function normalizeFontAndLineHeight(editable) {
+      editable.querySelectorAll("[style*='font-size']").forEach(element => {
+        const fontSize = parseInt(element.style.fontSize);
+        if (fontSize) {
+          element.style.lineHeight = calcLineHeightPx(fontSize) + "px";
+        }
+      });
+    }
+
+    function normalizeAllHeaderStyle(headerTag) {
+      const nodeEditable = document.querySelector('.note-editable');
+      if (nodeEditable) {
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(headerTag)) {
+          nodeEditable.querySelectorAll(headerTag).forEach(element => {
+            const size = parseInt(window.getComputedStyle(element).fontSize);
+    
+            if (size && !element.style.lineHeight) {
+              element.style.lineHeight = calcLineHeightPx(size) + "px";
+            }
+    
+            element.querySelectorAll("*").forEach(child => {
+              if (child.style) {
+                child.style.removeProperty("line-height");
+                child.style.removeProperty("font-size");
+    
+                if (child.getAttribute("style") === "") {
+                  child.removeAttribute("style");
+                }
+              }
+            });
+          });
+        } else {
+          nodeEditable.querySelectorAll(headerTag).forEach(element => {
+            if (element.style) {
+              element.style.removeProperty("line-height");
+
+              if (element.getAttribute("style") === "") {
+                element.removeAttribute("style");
+              }
+            }
+          });
+        }
+      }
+    }
   ''';
 
   static const String jsHandleOnKeyDown = '''
@@ -255,7 +309,7 @@ class JavascriptUtils {
       if (!isRangeOutsideSignatureButton()) {
         const nodeEditor = document.querySelector('.note-editable');
         if (nodeEditor) {
-          const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+          const signatureNode = document.querySelector('.note-editable > .tmail-signature');
           const imageContainer = document.createElement('div');
           imageContainer.innerHTML = imgSource;
           if (signatureNode) {
@@ -294,7 +348,7 @@ class JavascriptUtils {
     function safePasteHTML(htmlToInsert) {
       const nodeEditor = document.querySelector('.note-editable');
       if (nodeEditor) {
-        const signatureNode = document.querySelector('.note-editable > div.tmail-signature');
+        const signatureNode = document.querySelector('.note-editable > .tmail-signature');
         const imageContainer = document.createElement('div');
         imageContainer.innerHTML = htmlToInsert;
         if (signatureNode) {

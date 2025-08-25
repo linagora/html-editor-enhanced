@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html_editor_enhanced/utils/color_extension.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -548,7 +549,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.12))),
+                              .withValues(alpha: 0.12))),
           child: CustomDropdownButtonHideUnderline(
             child: CustomDropdownButton<String>(
               elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -680,7 +681,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<String>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -762,7 +763,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<double>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -869,8 +870,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                           _actualFontSizeSelectedItem = 48;
                           break;
                       }
-                      widget.controller.execCommand('fontSize',
-                          argument: changed.toString());
+                      widget.controller.setFontSize(_actualFontSizeSelectedItem.toInt());
                       updateSelectedItem(changed);
                     }
                   }
@@ -892,7 +892,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<String>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -1127,7 +1127,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     true;
                 if (proceed) {
                   widget.controller.execCommand('foreColor',
-                      argument: (Colors.black.value & 0xFFFFFF)
+                      argument: (Colors.black.toInt() & 0xFFFFFF)
                           .toRadixString(16)
                           .padLeft(6, '0')
                           .toUpperCase());
@@ -1141,7 +1141,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     true;
                 if (proceed) {
                   widget.controller.execCommand('hiliteColor',
-                      argument: (Colors.white.value & 0xFFFFFF)
+                      argument: (Colors.white.toInt() & 0xFFFFFF)
                           .toRadixString(16)
                           .padLeft(6, '0')
                           .toUpperCase());
@@ -1171,10 +1171,12 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   newColor = _backColorSelected;
                 }
 
-                if (context.mounted) {
-                  await showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
+                  showDialog(
+                      context: currentContext,
+                      builder: (context) {
                         return PointerInterceptor(
                           child: AlertDialog(
                             scrollable: true,
@@ -1246,7 +1248,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                   if (t.getIcons()[index].icon ==
                                       Icons.format_color_text) {
                                     widget.controller.execCommand('foreColor',
-                                        argument: (newColor.value & 0xFFFFFF)
+                                        argument: (newColor.toInt() & 0xFFFFFF)
                                             .toRadixString(16)
                                             .padLeft(6, '0')
                                             .toUpperCase());
@@ -1257,7 +1259,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                   if (t.getIcons()[index].icon ==
                                       Icons.format_color_fill) {
                                     widget.controller.execCommand('hiliteColor',
-                                        argument: (newColor.value & 0xFFFFFF)
+                                        argument: (newColor.toInt() & 0xFFFFFF)
                                             .toRadixString(16)
                                             .padLeft(6, '0')
                                             .toUpperCase());
@@ -1351,7 +1353,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<String>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -1577,7 +1579,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<double>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -1735,7 +1737,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12))),
+                                .withValues(alpha: 0.12))),
             child: CustomDropdownButtonHideUnderline(
               child: CustomDropdownButton<String>(
                 elevation: widget.htmlToolbarOptions.dropdownElevation,
@@ -1865,9 +1867,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 final formKey = GlobalKey<FormState>();
                 var openNewTab = false;
 
-                if (context.mounted) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2013,9 +2017,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 FilePickerResult? result;
                 String? validateFailed;
 
-                if (context.mounted) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2174,9 +2180,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 FilePickerResult? result;
                 String? validateFailed;
 
-                if (context.mounted) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2335,9 +2343,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 FilePickerResult? result;
                 String? validateFailed;
 
-                if (context.mounted) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2496,9 +2506,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 FilePickerResult? result;
                 String? validateFailed;
 
-                if (context.mounted) {
+                final currentContext = context;
+
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2634,9 +2646,10 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 var currentRows = 1;
                 var currentCols = 1;
 
-                if (context.mounted) {
+                final currentContext = context;
+                if (currentContext.mounted) {
                   await showDialog(
-                      context: context,
+                      context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2778,9 +2791,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.help, null, null) ??
                     true;
-                if (proceed && context.mounted) {
-                  await showDialog(
-                      context: context,
+                final currentContext = context;
+
+                if (proceed && currentContext.mounted) {
+                    await showDialog(
+                        context: currentContext,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
                           child: StatefulBuilder(builder:
@@ -2793,7 +2808,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                 child: SingleChildScrollView(
                                   child: DataTable(
                                     columnSpacing: 5,
-                                    dataRowHeight: 75,
+                                    dataRowMaxHeight: 75,
                                     columns: const <DataColumn>[
                                       DataColumn(
                                         label: Text(

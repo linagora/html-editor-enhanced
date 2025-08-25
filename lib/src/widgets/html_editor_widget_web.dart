@@ -86,6 +86,68 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   void initSummernote() async {
     var headString = '';
     var summernoteCallbacks = '''callbacks: {
+        ${widget.htmlEditorOptions.useDefaultFontSize
+          ? '''
+              onInit: function() {
+                const editor = document.querySelector('.note-editable');
+                if (!editor) return;
+                
+                editor.style.fontSize = "${widget.htmlEditorOptions.defaultFontSize}px";
+                editor.style.lineHeight = calcLineHeightPx(`${widget.htmlEditorOptions.defaultFontSize}`) + "px";
+              },
+              onChange: function(contents, \$editable) {
+                normalizeFontAndLineHeight(\$editable[0]);
+              },
+              onKeyup: function(e) {
+                if (e.which === 13) {
+                  setTimeout(() => {
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    let node = sel.anchorNode;
+          
+                    if (node.nodeType === 3) {
+                      node = node.parentNode;
+                    }
+                    
+                    if (node) {
+                      if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(node.tagName)) {
+                        return;
+                      }
+
+                      if (node.tagName === "FONT" && node.style) {
+                        node.style.removeProperty("line-height");
+                        if (node.getAttribute("style") === "") {
+                          node.removeAttribute("style");
+                        }
+
+                        const parent = node.parentElement;
+                        if (parent && parent.tagName === "FONT") {
+                          parent.replaceWith(node);
+                        }
+                        return;
+                      }
+                      
+                      if (node.style) {
+                        const lh = node.style.lineHeight;
+                        const currentLineHeight = calcLineHeightPx(activeFontSize) + "px";
+                        if (lh !== currentLineHeight) {
+                          node.style.lineHeight = currentLineHeight;
+                        }
+                      }
+
+                      const parent = node.parentElement;
+                      if (parent && parent.tagName === "FONT" && parent.style) {
+                        parent.style.removeProperty("line-height");
+                        if (parent.getAttribute("style") === "") {
+                          parent.removeAttribute("style");
+                        }
+                      }
+                    }
+                  }, 0);
+                }
+              },
+            '''
+          : ''}
         onKeydown: function(e) {
             var chars = \$(".note-editable").text();
             var totalChars = chars.length;
@@ -390,23 +452,29 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 \$('.note-status-output').empty();
               }
               if (data["type"].includes("execCommand")) {
-                var commandType = data["command"];
+                const commandType = data["command"];
+                const argument = data["argument"];
+
                 if (commandType === "hiliteColor") {
-                  if (data["argument"] === null) {
+                  if (argument === null) {
                     if (!document.execCommand("hiliteColor", false)) {
                       document.execCommand("backColor", false);
                     }
                   } else {
-                    if (!document.execCommand("hiliteColor", false, data["argument"])) {
-                      document.execCommand("backColor", false, data["argument"]);
+                    if (!document.execCommand("hiliteColor", false, argument)) {
+                      document.execCommand("backColor", false, argument);
                     }
                   }
                 } else {
-                  if (data["argument"] === null) {
+                  if (argument === null) {
                     document.execCommand(commandType, false);
                   } else {
-                    document.execCommand(commandType, false, data["argument"]);
+                    document.execCommand(commandType, false, argument);
                   }
+                }
+
+                if (commandType === "formatBlock") {
+                  normalizeAllHeaderStyle(argument);
                 }
               }
               if (data["type"].includes("execSummernoteAPI")) {
@@ -416,6 +484,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                   \$('#summernote-2').summernote(nameAPI);
                 } else {
                   \$('#summernote-2').summernote(nameAPI, value);
+                }
+                if (['formatPara', 'formatH1', 'formatH2', 'formatH3', 'formatH4', 'formatH5', 'formatH6'].includes(nameAPI)) {
+                  normalizeAllHeaderStyle(value);
                 }
               }
               if (data["type"].includes("setFontSize")) {
@@ -533,7 +604,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ${JavascriptUtils.jsHandleCreateSignature(createdViewId)}
         ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
-        ${JavascriptUtils.jsHandleSetFontSize}
+        ${widget.htmlEditorOptions.useDefaultFontSize
+          ? JavascriptUtils.jsHandleSetupDefaultFontSize(widget.htmlEditorOptions.defaultFontSize, widget.htmlEditorOptions.defaultLineHeight)
+          : ''}
+        ${JavascriptUtils.jsHandleSetFontSize(widget.htmlEditorOptions.defaultFontSize)}
         ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}
         
         function onSelectionChange() {
