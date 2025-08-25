@@ -110,6 +110,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                     }
                     
                     if (node) {
+                      if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(node.tagName)) {
+                        return;
+                      }
+
                       if (node.tagName === "FONT" && node.style) {
                         node.style.removeProperty("line-height");
                         if (node.getAttribute("style") === "") {
@@ -118,15 +122,24 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
                         const parent = node.parentElement;
                         if (parent && parent.tagName === "FONT") {
-                          parent.remove();
+                          parent.replaceWith(node);
                         }
-                      } else {
-                        const parent = node.parentElement;
-                        if (parent && parent.tagName === "FONT" && parent.style) {
-                          parent.style.removeProperty("line-height");
-                          if (parent.getAttribute("style") === "") {
-                            parent.removeAttribute("style");
-                          }
+                        return;
+                      }
+                      
+                      if (node.style) {
+                        const lh = element.style.lineHeight;
+                        const currentLineHeight = calcLineHeightPx(activeFontSize) + "px";
+                        if (lh !== currentLineHeight) {
+                          element.style.lineHeight = currentLineHeight + "px";
+                        }
+                      }
+
+                      const parent = node.parentElement;
+                      if (parent && parent.tagName === "FONT" && parent.style) {
+                        parent.style.removeProperty("line-height");
+                        if (parent.getAttribute("style") === "") {
+                          parent.removeAttribute("style");
                         }
                       }
                     }
