@@ -838,31 +838,31 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
       if (data['type'] != null && data['type'].contains('toDart:')) {
         if (data['type'].contains('onBeforeCommand')) {
-          c.onBeforeCommand!.call(data['contents']);
+          c.onBeforeCommand?.call(data['contents']);
         }
         if (data['type'].contains('onChangeContent')) {
-          c.onChangeContent!.call(data['contents']);
+          c.onChangeContent?.call(data['contents']);
         }
         if (data['type'].contains('onChangeCodeview')) {
-          c.onChangeCodeview!.call(data['contents']);
+          c.onChangeCodeview?.call(data['contents']);
         }
         if (data['type'].contains('onDialogShown')) {
-          c.onDialogShown!.call();
+          c.onDialogShown?.call();
         }
         if (data['type'].contains('onEnter')) {
-          c.onEnter!.call();
+          c.onEnter?.call();
         }
         if (data['type'].contains('onFocus')) {
-          c.onFocus!.call();
+          c.onFocus?.call();
         }
         if (data['type'].contains('onUnFocus')) {
-          c.onUnFocus!.call();
+          c.onUnFocus?.call();
         }
         if (data['type'].contains('onBlurCodeview')) {
-          c.onBlurCodeview!.call();
+          c.onBlurCodeview?.call();
         }
         if (data['type'].contains('onImageLinkInsert')) {
-          c.onImageLinkInsert!.call(data['url']);
+          c.onImageLinkInsert?.call(data['url']);
         }
         if (data['type'].contains('onImageUpload')) {
           try {
@@ -870,10 +870,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
             final listFileUpload = dataList.map((data) => FileUpload.fromJson(data)).toList();
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: COUNT_FILE_UPLOADED: ${listFileUpload.length}');
-            c.onImageUpload!.call(listFileUpload);
+            c.onImageUpload?.call(listFileUpload);
           } catch (e) {
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUpload: Exception: $e');
-            c.onImageUploadError!.call(null, null, UploadError.jsException);
+            c.onImageUploadError?.call(null, null, UploadError.jsException);
           }
         }
         if (data['type'].contains('onImageUploadError')) {
@@ -890,44 +890,43 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
 
           try {
-
             if (base64 != null) {
-              c.onImageUploadError!.call(null, base64, uploadError);
+              c.onImageUploadError?.call(null, base64, uploadError);
             } else {
               final jsonString = jsonEncode(data['listFileFailed']);
               List<Map<String, dynamic>> dataList = jsonDecode(jsonString).cast<Map<String, dynamic>>();
               final listFileUploadFailed = dataList.map((data) => FileUpload.fromJson(data)).toList();
               debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: COUNT_FILE_FAILED: ${listFileUploadFailed.length}');
-              c.onImageUpload!.call(listFileUploadFailed);
+              c.onImageUpload?.call(listFileUploadFailed);
             }
           } catch (e) {
             debugPrint('_HtmlEditorWidgetWebState::addJSListener::onImageUploadError: Exception: $e');
-            c.onImageUploadError!.call(null, null, uploadError);
+            c.onImageUploadError?.call(null, null, uploadError);
           }
         }
         if (data['type'].contains('onKeyDown')) {
-          c.onKeyDown!.call(data['keyCode']);
+          c.onKeyDown?.call(data['keyCode']);
         }
         if (data['type'].contains('onKeyUp')) {
-          c.onKeyUp!.call(data['keyCode']);
+          c.onKeyUp?.call(data['keyCode']);
         }
         if (data['type'].contains('onMouseDown')) {
-          c.onMouseDown!.call();
+          c.onMouseDown?.call();
         }
         if (data['type'].contains('onMouseUp')) {
-          c.onMouseUp!.call();
+          c.onMouseUp?.call();
         }
         if (data['type'].contains('onPaste')) {
-          c.onPaste!.call();
+          c.onPaste?.call();
         }
         if (data['type'].contains('onScroll')) {
-          c.onScroll!.call();
+          c.onScroll?.call();
         }
         if (data['type'].contains('characterCount')) {
           widget.controller.characterCount = data['totalChars'];
         }
         if (data['type'].contains('onTextFontSizeChanged')) {
-          c.onTextFontSizeChanged!.call(data['size']);
+          c.onTextFontSizeChanged?.call(data['size']);
         }
         if (data['type'].contains('onDragEnter') && c.onDragEnter != null) {
           c.onDragEnter!.call(data['types']);
