@@ -191,7 +191,7 @@ class HtmlEditorController {
   void insertTable(String dimensions) {}
 
   /// Insert signature for compose email
-  void insertSignature(String signature) {}
+  void insertSignature(String signature, {bool allowCollapsed = true}) {}
 
   /// Remove signature from compose email
   void removeSignature() {}
