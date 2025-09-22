@@ -1,85 +1,73 @@
 class JavascriptUtils {
   const JavascriptUtils._();
 
-  static String jsHandleInsertSignature(String viewId) => '''
-    const signatureNode = document.querySelector('.note-editable > .tmail-signature');
-    const signatureHtml = data['signature'];
-    
-    if (signatureNode) {
-      const currentSignatureContent = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
-      const currentSignatureButton = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-button');
-    
-      if (currentSignatureContent && currentSignatureButton) {
-        currentSignatureContent.innerHTML = signatureHtml;
-        currentSignatureButton.contentEditable = "false";
-        currentSignatureButton.setAttribute('onclick', 'handleOnClickSignature()');
-        currentSignatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
-        currentSignatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
+  static String jsHandleCreateSignature(String viewId) => '''
+   function insertSignature(signatureHtml, allowCollapsed) {
+      const signatureNode = document.querySelector('.note-editable > .tmail-signature');
+      
+      if (signatureNode) {
+        const currentSignatureContent = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
+        const currentSignatureButton = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-button');
+      
+        if (currentSignatureContent && currentSignatureButton) {
+          currentSignatureContent.innerHTML = signatureHtml;
+          
+          if (allowCollapsed) {
+            currentSignatureButton.contentEditable = "false";
+            currentSignatureButton.setAttribute('onclick', 'handleOnClickSignature()');
+            currentSignatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
+            currentSignatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
+            const browserName = getBrowserName();
+            if (browserName === 'Firefox') {
+              currentSignatureButton.style.userSelect = 'none';
+            }
+          } else {
+            replaceSignatureContent();
+          }
+        } else {
+          const signatureContainer = createSignatureElement(signatureHtml, allowCollapsed);
+      
+          if (signatureNode.outerHTML) {
+            signatureNode.outerHTML = signatureContainer.outerHTML;
+          } else {
+            signatureNode.parentNode.replaceChild(signatureContainer, signatureNode);
+          }
+        }
       } else {
-        const signatureContainer = createSignatureElement(signatureHtml);
-    
-        if (signatureNode.outerHTML) {
-          signatureNode.outerHTML = signatureContainer.outerHTML;
-        } else {
-          signatureNode.parentNode.replaceChild(signatureContainer, signatureNode);
+        const signatureContainer = createSignatureElement(signatureHtml, allowCollapsed);
+      
+        const nodeEditor = document.querySelector('.note-editable');
+        if (nodeEditor) {
+          const headerQuotedMessage = document.querySelector('.note-editable > cite');
+          const quotedMessage = document.querySelector('.note-editable > blockquote');
+      
+          if (headerQuotedMessage) {
+            nodeEditor.insertBefore(signatureContainer, headerQuotedMessage);
+          } else if (quotedMessage) {
+            nodeEditor.insertBefore(signatureContainer, quotedMessage);
+          } else {
+            nodeEditor.appendChild(signatureContainer);
+          }
         }
       }
-    } else {
-      const signatureContainer = createSignatureElement(signatureHtml);
-    
-      const nodeEditor = document.querySelector('.note-editable');
-      if (nodeEditor) {
-        const headerQuotedMessage = document.querySelector('.note-editable > cite');
-        const quotedMessage = document.querySelector('.note-editable > blockquote');
-    
-        if (headerQuotedMessage) {
-          nodeEditor.insertBefore(signatureContainer, headerQuotedMessage);
-        } else if (quotedMessage) {
-          nodeEditor.insertBefore(signatureContainer, quotedMessage);
-        } else {
-          nodeEditor.appendChild(signatureContainer);
+   }
+   
+   function replaceSignatureContent() {
+      const nodeSignature = document.querySelector('.note-editable > .tmail-signature');
+      const signatureContent = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
+      if (nodeSignature && signatureContent) {
+        signatureContent.className = 'tmail-signature';
+        signatureContent.style.display = 'block';
+        signatureContent.style.clear = 'both';
+          
+        if (nodeSignature.outerHTML) {
+          nodeSignature.outerHTML = signatureContent.outerHTML;
+        } else { 
+          nodeSignature.parentNode.replaceChild(signatureContent, nodeSignature); 
         }
       }
-    }
-    var browserName = getBrowserName();
-    var signatureButton = document.querySelector('.tmail-signature-button');
-    if (browserName === 'Firefox' && signatureButton) {
-      signatureButton.style.userSelect = 'none';
-    }
-  ''';
-
-  static const String jsHandleRemoveSignature = '''
-    const nodeSignature = document.querySelector('.note-editable > .tmail-signature');
-    if (nodeSignature) {
-      nodeSignature.remove();
-    }
-  ''';
-
-  static const String jsHandleReplaceSignatureContent = '''
-    const nodeSignature = document.querySelector('.note-editable > .tmail-signature');
-    const signatureContent = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
-    if (nodeSignature && signatureContent) {
-      signatureContent.className = 'tmail-signature';
-      signatureContent.style.display = 'block';
-      signatureContent.style.clear = 'both';
-        
-      if (nodeSignature.outerHTML) {
-        nodeSignature.outerHTML = signatureContent.outerHTML;
-      } else { 
-        nodeSignature.parentNode.replaceChild(signatureContent, nodeSignature); 
-      }
-    }
-  ''';
-
-  static const String jsHandleUpdateBodyDirection = '''
-    const nodeEditor = document.querySelector('.note-editable');
-    if (nodeEditor) {
-      const currentDirection = data['direction'];
-      nodeEditor.style.direction = currentDirection.toString();
-    }
-  ''';
-
-  static const String jsHandleOnClickSignature = '''
+   }
+    
    function handleOnClickSignature() {
      const contentElement = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-content');
      const buttonElement = document.querySelector('.note-editable > .tmail-signature > .tmail-signature-button');
@@ -87,39 +75,61 @@ class JavascriptUtils {
         contentElement.style.display = contentElement.style.display === 'block' ? 'none' : 'block';
      }
    }
-  ''';
-
-  static String jsHandleCreateSignature(String viewId) => '''
-   function createSignatureElement(signatureHtml) {
+   
+   function updateBodyDirection(direction) {
+     const nodeEditor = document.querySelector('.note-editable');
+     if (nodeEditor) {
+        const currentDirection = direction;
+        nodeEditor.style.direction = currentDirection.toString();
+     }
+   }
+   
+   function removeSignature() {
+      const nodeSignature = document.querySelector('.note-editable > .tmail-signature');
+      if (nodeSignature) {
+        nodeSignature.remove();
+      }
+   }
+   
+   function createSignatureElement(signatureHtml, allowCollapsed) {
       const signatureContainer = document.createElement("div");
       signatureContainer.className = "tmail-signature";
       signatureContainer.style.clear = "both";
     
-      const signatureContent = document.createElement("div");
-      signatureContent.className = "tmail-signature-content";
-      signatureContent.innerHTML = signatureHtml;
-      signatureContent.style.display = "none";
-    
-      const signatureButton = document.createElement("div");
-      signatureButton.className = "tmail-signature-button";
-      signatureButton.contentEditable = "false";
-      signatureButton.setAttribute("onclick", "handleOnClickSignature()");
-      signatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
-      signatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
-    
-      const signatureButtonThreeDots = document.createElement("button");
-      signatureButtonThreeDots.className = "tmail-signature-button-three-dots";
-    
-      for (let i = 0; i < 3; i++) {
-        const dot = document.createElement("div");
-        dot.className = "tmail-signature-button-dot";
-        signatureButtonThreeDots.appendChild(dot);
+      if (allowCollapsed) {
+        const signatureContent = document.createElement("div");
+        signatureContent.className = "tmail-signature-content";
+        signatureContent.innerHTML = signatureHtml;
+        signatureContent.style.display = "none";
+      
+        const signatureButton = document.createElement("div");
+        signatureButton.className = "tmail-signature-button";
+        signatureButton.contentEditable = "false";
+        signatureButton.setAttribute("onclick", "handleOnClickSignature()");
+        signatureButton.setAttribute("onmouseenter", "handleSignatureHoverIn(this)");
+        signatureButton.setAttribute("onmouseleave", "handleSignatureHoverOut(this)");
+        const browserName = getBrowserName();
+        if (browserName === 'Firefox') {
+          signatureButton.style.userSelect = 'none';
+        }
+      
+        const signatureButtonThreeDots = document.createElement("button");
+        signatureButtonThreeDots.className = "tmail-signature-button-three-dots";
+      
+        for (let i = 0; i < 3; i++) {
+          const dot = document.createElement("div");
+          dot.className = "tmail-signature-button-dot";
+          signatureButtonThreeDots.appendChild(dot);
+        }
+      
+        signatureButton.appendChild(signatureButtonThreeDots);
+      
+        signatureContainer.appendChild(signatureButton);
+        signatureContainer.appendChild(signatureContent);
+      } else {
+        signatureContainer.innerHTML = signatureHtml;
+        signatureContainer.style.display = "block";
       }
-    
-      signatureButton.appendChild(signatureButtonThreeDots);
-    
-      signatureContainer.appendChild(signatureButton);
-      signatureContainer.appendChild(signatureContent);
       
       return signatureContainer;
     }

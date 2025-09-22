@@ -292,7 +292,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
                 window.parent.postMessage(JSON.stringify({"type": "toDart: getText", "text": str}), "*");
               }
               if (data["type"].includes("getTextWithSignatureContent")) {
-                ${JavascriptUtils.jsHandleReplaceSignatureContent}
+                replaceSignatureContent();
                 
                 var str = \$('#summernote-2').summernote('code');
                 window.parent.postMessage(JSON.stringify({"type": "toDart: getTextWithSignatureContent", "text": str}), "*");
@@ -482,21 +482,21 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
               }
               
               if (data["type"].includes("insertSignature")) {
-                ${JavascriptUtils.jsHandleInsertSignature(createdViewId)}
+                insertSignature(data["signature"], data["allowCollapsed"]);
                
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
               
               if (data["type"].includes("removeSignature")) {
-                ${JavascriptUtils.jsHandleRemoveSignature}
+                removeSignature();
 
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
               }
               
               if (data["type"].includes("updateBodyDirection")) {
-                ${JavascriptUtils.jsHandleUpdateBodyDirection}
+                updateBodyDirection(data["direction"]);
 
                 const contentsEditor = document.getElementsByClassName('note-editable')[0].innerHTML;
                 window.parent.postMessage(JSON.stringify({"view": "$createdViewId", "type": "toDart: onChangeContent", "contents": contentsEditor}), "*");
@@ -531,7 +531,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         }
         
         ${JavascriptUtils.jsHandleCreateSignature(createdViewId)}
-        ${JavascriptUtils.jsHandleOnClickSignature}
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
         ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}

@@ -378,11 +378,12 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   }
 
   @override
-  void insertSignature(String signature) {
+  void insertSignature(String signature, {bool allowCollapsed = true}) {
     _evaluateJavascriptWeb(
       data: {
         'type': 'toIframe: insertSignature',
         'signature': signature,
+        'allowCollapsed': allowCollapsed,
       }
     );
   }

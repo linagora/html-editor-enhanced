@@ -294,7 +294,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   void insertTable(String dimensions) {}
 
   @override
-  void insertSignature(String signature) {}
+  void insertSignature(String signature, {bool allowCollapsed = true}) {}
 
   @override
   void removeSignature() {}
