@@ -1,3 +1,7 @@
+## [3.2.4] - 2025-10-06
+
+- Allow `enable/disable` collapsed signature
+
 ## [3.2.3] - 2025-08-07
 
 - Display a three-dot (⋯) icon for signature options
