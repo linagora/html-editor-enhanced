@@ -320,16 +320,41 @@ class JavascriptUtils {
   ''';
 
   static const String jsHandleNormalizeHtmlTextWhenDropping = '''
+    const INTERNAL_MIME = 'application/x-editor-internal';
+  
     let noteEditor = document.getElementsByClassName('note-editor')[0];
     if (noteEditor) {
+    
+      noteEditor.addEventListener('dragstart', (e) => {
+        try {
+          e.dataTransfer.setData(INTERNAL_MIME, '1'); 
+        } catch (_) {}
+      });
+            
+      noteEditor.addEventListener('dragover', (e) => {
+        try {
+          const dt = (e.originalEvent || e).dataTransfer || e.dataTransfer;
+          if (!dt) return;
+          const types = Array.from(dt.types || []);
+          const isInternal = types.includes(INTERNAL_MIME);
+          if (!isInternal) {
+            e.preventDefault();
+          }
+        } catch (_) {}
+      });
+      
       noteEditor.addEventListener("drop", function(event) {
-        let types = event.dataTransfer.types;
-        if (types.includes("text/html")) {
-          try {
-            const dataTransfer = (event.originalEvent || event).dataTransfer;
-            const htmlData = dataTransfer.getData('text/html');
-            if (!htmlData) return;
-             
+        try {
+          const dataTransfer = (event.originalEvent || event).dataTransfer;
+          if (!dataTransfer) return;
+      
+          const types = Array.from(dataTransfer.types || []);
+          const isInternal = types.includes(INTERNAL_MIME);
+          const htmlData = dataTransfer.getData('text/html');
+        
+          if (isInternal) return;
+          
+          if (htmlData) {
             event.preventDefault();
             
             const x = event.clientX;
@@ -355,10 +380,8 @@ class JavascriptUtils {
             setTimeout(() => {
               document.execCommand("insertHTML", false, htmlData);
             }, 0);
-          } catch (error) {
-            console.error('[Drop Handler] Error during drop handling:', error);
           }
-        }
+        } catch (_) {}
       });
     }
   ''';
