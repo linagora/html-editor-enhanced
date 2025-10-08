@@ -1,3 +1,7 @@
+## [3.2.5] - 2025-10-08
+
+- Fix drag & drop issue: text copies instead of moves in the editor.
+
 ## [3.2.4] - 2025-10-06
 
 - Allow `enable/disable` collapsed signature
