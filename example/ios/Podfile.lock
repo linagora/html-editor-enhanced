@@ -34,16 +34,18 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
-  - flutter_inappwebview (0.0.1):
+  - flutter_inappwebview_ios (0.0.1):
     - Flutter
-    - flutter_inappwebview/Core (= 0.0.1)
-    - OrderedSet (~> 5.0)
-  - flutter_inappwebview/Core (0.0.1):
+    - flutter_inappwebview_ios/Core (= 0.0.1)
+    - OrderedSet (~> 6.0.3)
+  - flutter_inappwebview_ios/Core (0.0.1):
     - Flutter
-    - OrderedSet (~> 5.0)
+    - OrderedSet (~> 6.0.3)
   - flutter_keyboard_visibility (0.0.1):
     - Flutter
-  - OrderedSet (5.0.0)
+  - OrderedSet (6.0.3)
+  - pointer_interceptor_ios (0.0.1):
+    - Flutter
   - SDWebImage (5.13.2):
     - SDWebImage/Core (= 5.13.2)
   - SDWebImage/Core (5.13.2)
@@ -52,8 +54,9 @@ PODS:
 DEPENDENCIES:
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
-  - flutter_inappwebview (from `.symlinks/plugins/flutter_inappwebview/ios`)
+  - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - pointer_interceptor_ios (from `.symlinks/plugins/pointer_interceptor_ios/ios`)
 
 SPEC REPOS:
   trunk:
@@ -68,22 +71,25 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/file_picker/ios"
   Flutter:
     :path: Flutter
-  flutter_inappwebview:
-    :path: ".symlinks/plugins/flutter_inappwebview/ios"
+  flutter_inappwebview_ios:
+    :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_keyboard_visibility:
     :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  pointer_interceptor_ios:
+    :path: ".symlinks/plugins/pointer_interceptor_ios/ios"
 
 SPEC CHECKSUMS:
   DKImagePickerController: b512c28220a2b8ac7419f21c491fc8534b7601ac
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
-  file_picker: ce3938a0df3cc1ef404671531facef740d03f920
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  flutter_inappwebview: 4fe74e5e65809c3d363febfd9e2b21aa79bb0f1c
-  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
-  OrderedSet: aaeb196f7fef5a9edf55d89760da9176ad40b93c
+  file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
+  flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
+  OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
+  pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
   SDWebImage: 72f86271a6f3139cc7e4a89220946489d4b9a866
   SwiftyGif: 6c3eafd0ce693cad58bb63d2b2fb9bacb8552780
 
-PODFILE CHECKSUM: ef19549a9bc3046e7bb7d2fab4d021637c0c58a3
+PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.16.2
