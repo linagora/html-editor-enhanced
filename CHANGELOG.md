@@ -1,3 +1,7 @@
+## [3.3.0] - 2025-08-24
+
+- Support flutter version `3.32.8`
+
 ## [3.2.5] - 2025-10-08
 
 - Fix drag & drop issue: text copies instead of moves in the editor.
