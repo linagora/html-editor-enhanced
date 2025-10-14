@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
-import 'package:html_editor_enhanced/utils/shims/dart_ui.dart';
 
 /// small function to always check if mounted before running setState()
 void setState(
@@ -1047,7 +1046,7 @@ class _DropdownButtonState<T> extends State<CustomDropdownButton<T>>
   Orientation _getOrientation(BuildContext context) {
     var result = MediaQuery.maybeOf(context)?.orientation;
     if (result == null) {
-      final Size size = window.physicalSize;
+      final Size size = View.of(context).physicalSize;
       result = size.width > size.height
           ? Orientation.landscape
           : Orientation.portrait;
@@ -1090,8 +1089,7 @@ class _DropdownButtonState<T> extends State<CustomDropdownButton<T>>
       hintIndex = items.length;
       items.add(DefaultTextStyle(
         style: _textStyle!.copyWith(color: Theme.of(context).hintColor),
-        child: IgnorePointer(
-          ignoringSemantics: false,
+        child: ExcludeSemantics(
           child: displayedHint,
         ),
       ));
