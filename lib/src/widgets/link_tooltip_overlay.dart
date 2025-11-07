@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ typedef CustomLinkButtonBuilder = Widget Function(
 
 class LinkTooltipOverlay {
   OverlayEntry? _entry;
+  final _jsonEncoder = const JsonEncoder();
 
   final CustomLinkButtonBuilder? removeLinkButtonBuilder;
   final CustomLinkButtonBuilder? editLinkButtonBuilder;
@@ -278,25 +280,12 @@ class LinkTooltipOverlay {
   }
 
   void _postMessageToIframe(String type, String href, {String? iframeId}) {
-    final message = {
+    final messageAsJson = _jsonEncoder.convert({
       if (iframeId != null) 'view': iframeId,
       'type': 'toIframe: $type',
       'href': href,
-    };
-
-    try {
-      final iframe = iframeId != null
-          ? web.document.getElementById(iframeId)
-          : web.document.querySelector('iframe');
-
-      if (iframe is web.HTMLIFrameElement) {
-        iframe.contentWindow?.postMessage(message.jsify(), '*'.toJS);
-      } else {
-        web.window.postMessage(message.jsify(), '*'.toJS);
-      }
-    } catch (e) {
-      web.window.postMessage(message.jsify(), '*'.toJS);
-    }
+    });
+    web.window.postMessage(messageAsJson.jsify(), '*'.toJS);
   }
 
   void hide() {
