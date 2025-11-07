@@ -1,46 +1,20 @@
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/html_editor_controller_unsupported.dart'
     as unsupported;
 import 'package:meta/meta.dart';
+import 'package:web/web.dart' as web;
 
 /// Controller for web
 class HtmlEditorController extends unsupported.HtmlEditorController {
   HtmlEditorController({
-    this.processInputHtml = true,
-    this.processNewLineAsBr = false,
-    this.processOutputHtml = true,
+    super.processInputHtml = true,
+    super.processNewLineAsBr = false,
+    super.processOutputHtml = true,
   });
-
-  /// Toolbar widget state to call various methods. For internal use only.
-  @override
-  ToolbarWidgetState? toolbar;
-
-  /// Determines whether text processing should happen on input HTML, e.g.
-  /// whether a new line should be converted to a <br>.
-  ///
-  /// The default value is true.
-  @override
-  final bool processInputHtml;
-
-  /// Determines whether newlines (\n) should be written as <br>. This is not
-  /// recommended for HTML documents.
-  ///
-  /// The default value is false.
-  @override
-  final bool processNewLineAsBr;
-
-  /// Determines whether text processing should happen on output HTML, e.g.
-  /// whether <p><br></p> is returned as "". For reference, Summernote uses
-  /// that HTML as the default HTML (when no text is in the editor).
-  ///
-  /// The default value is true.
-  @override
-  final bool processOutputHtml;
 
   /// Manages the view ID for the [HtmlEditorController] on web
   String? _viewId;
@@ -55,14 +29,21 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   Future<String> getText() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: getText'});
-    var e = await html.window.onMessage.firstWhere(
-        (element) => json.decode(element.data)['type'] == 'toDart: getText');
-    String text = json.decode(e.data)['text'];
+
+    final event = await web.window.onMessage.firstWhere((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data['type'] == 'toDart: getText';
+    });
+    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    String text = data['text'];
+
     if (processOutputHtml &&
         (text.isEmpty ||
             text == '<p></p>' ||
             text == '<p><br></p>' ||
-            text == '<p><br/></p>')) text = '';
+            text == '<p><br/></p>')) {
+      text = '';
+    }
     return text;
   }
 
@@ -70,14 +51,21 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   Future<String> getTextWithSignatureContent() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: getTextWithSignatureContent'});
-    var e = await html.window.onMessage.firstWhere(
-            (element) => json.decode(element.data)['type'] == 'toDart: getTextWithSignatureContent');
-    String text = json.decode(e.data)['text'];
+
+    final event = await web.window.onMessage.firstWhere((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data['type'] == 'toDart: getTextWithSignatureContent';
+    });
+    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    String text = data['text'];
+
     if (processOutputHtml &&
         (text.isEmpty ||
             text == '<p></p>' ||
             text == '<p><br></p>' ||
-            text == '<p><br/></p>')) text = '';
+            text == '<p><br/></p>')) {
+      text = '';
+    }
     return text;
   }
 
@@ -88,9 +76,13 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     } else {
       _evaluateJavascriptWeb(data: {'type': 'toIframe: getSelectedText'});
     }
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: getSelectedText');
-    return json.decode(e.data)['text'];
+    final event = await web.window.onMessage.firstWhere((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data['type'] == 'toDart: getSelectedText';
+    });
+    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    String selectedText = data['text'];
+    return selectedText;
   }
 
   /// Sets the text of the editor. Some pre-processing is applied to convert
@@ -111,10 +103,13 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   Future<bool> isFullScreen() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: isFullScreen'});
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: isFullScreen');
-    bool value = json.decode(e.data)['value'];
-    return value;
+    final event = await web.window.onMessage.firstWhere((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data['type'] == 'toDart: isFullScreen';
+    });
+    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    bool isFullScreen = data['value'];
+    return isFullScreen;
   }
 
   /// Sets the focus to the editor.
@@ -146,9 +141,12 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   @override
   Future<bool> isActivatedCodeView() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: isActivatedCodeView'});
-    var e = await html.window.onMessage.firstWhere((element) =>
-        json.decode(element.data)['type'] == 'toDart: isActivatedCodeView');
-    bool isActivated = json.decode(e.data)['value'];
+    final event = await web.window.onMessage.firstWhere((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data['type'] == 'toDart: isActivatedCodeView';
+    });
+    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    bool isActivated = data['value'];
     return isActivated;
   }
 
@@ -283,9 +281,12 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       {bool hasReturnValue = false}) async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: $name'});
     if (hasReturnValue) {
-      var e = await html.window.onMessage.firstWhere(
-          (element) => json.decode(element.data)['type'] == 'toDart: $name');
-      return json.decode(e.data);
+      final event = await web.window.onMessage.firstWhere((event) {
+        final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+        return data['type'] == 'toDart: $name';
+      });
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      return data;
     }
   }
 
@@ -338,7 +339,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       _evaluateJavascriptWeb(data: {
         'type': 'toIframe: addNotification',
         'html': html,
-        'alertType': 'alert alert-${describeEnum(notificationType)}'
+        'alertType': 'alert alert-${notificationType.name}'
       });
     }
     recalculateHeight();
@@ -370,7 +371,7 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       data['view'] = _viewId;
       const jsonEncoder = JsonEncoder();
       var json = jsonEncoder.convert(data);
-      html.window.postMessage(json, '*');
+      web.window.postMessage(json.jsify(), '*'.toJS);
     } else {
       throw Exception(
           'Non-Flutter Web environment detected, please make sure you are importing package:html_editor_enhanced/html_editor.dart');
