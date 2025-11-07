@@ -417,17 +417,13 @@ class JavascriptUtils {
   ''';
 
   static const String jsHandleEditAndRemoveLink = '''
-    if (dataType.includes("editLink")) {
+    if (data["type"].includes("editLink")) {
        try {
-          const currentHref = document.queryCommandValue('createLink') || data.href || '';
-          const newHref = prompt('Edit link URL:', currentHref);
-          if (newHref) {
-            \$('#summernote-2').summernote('createLink', { url: newHref });
-          }
+         \$('#summernote-2').summernote('linkDialog.show');
        } catch (_) {}
     }
     
-    if (dataType.includes("editLink")) {
+    if (data["type"].includes("removeLink")) {
       try {
         \$('#summernote-2').summernote('editor.unlink');
       } catch (_) {}
