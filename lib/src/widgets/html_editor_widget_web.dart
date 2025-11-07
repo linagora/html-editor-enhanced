@@ -1,18 +1,15 @@
-export 'dart:html';
-
 import 'dart:async';
 import 'dart:convert';
+import 'dart:js_interop';
 import 'dart:ui_web';
 
 import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-
-/// The HTML Editor widget itself, for web (uses IFrameElement)
+/// The HTML Editor widget itself, for web (uses HTMLIFrameElement)
 class HtmlEditorWidget extends StatefulWidget {
   const HtmlEditorWidget({
     Key? key,
@@ -59,8 +56,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   final _jsonEncoder = const JsonEncoder();
 
-  StreamSubscription<html.MessageEvent>? _editorJSListener;
-  StreamSubscription<html.MessageEvent>? _summernoteOnLoadListener;
+  StreamSubscription<web.MessageEvent>? _editorJSListener;
+  StreamSubscription<web.MessageEvent>? _summernoteOnLoadListener;
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
 
   @override
@@ -129,8 +126,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             },
           ''';
         if (p.onSelect != null) {
-          html.window.onMessage.listen((event) {
-            var data = json.decode(event.data);
+          web.window.onMessage.listen((event) {
+            final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+
             if (data['type'] != null &&
                 data['type'].contains('toDart:') &&
                 data['view'] == createdViewId &&
@@ -664,10 +662,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     } else {
       maxWidth = '800';
     }
-    final iframe = html.IFrameElement()
+    final iframe = web.HTMLIFrameElement()
       ..width = maxWidth
       // ignore: unsafe_html, necessary to load HTML string
-      ..srcdoc = htmlString
+      ..srcdoc = htmlString.toJS
       ..style.border = 'none'
       ..style.overflow = 'hidden'
       ..style.width = '100%'
@@ -830,8 +828,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   /// Adds an event listener to check when a callback is fired
   void addJSListener(Callbacks c) {
-    _editorJSListener = html.window.onMessage.listen((event) {
-      var data = json.decode(event.data);
+    _editorJSListener = web.window.onMessage.listen((event) {
+      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
 
       if (data['view'] != createdViewId) return;
 
@@ -968,8 +966,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         data2['view'] = createdViewId;
         var jsonStr = _jsonEncoder.convert(data);
         var jsonStr2 = _jsonEncoder.convert(data2);
-        _summernoteOnLoadListener = html.window.onMessage.listen((event) {
-          var data = json.decode(event.data);
+        _summernoteOnLoadListener = web.window.onMessage.listen((event) {
+          final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+
           if (data['type'] != null &&
               data['type'].contains('toDart: onChangeContent') &&
               data['view'] == createdViewId) {
@@ -997,8 +996,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             }
           }
         });
-        html.window.postMessage(jsonStr, '*');
-        html.window.postMessage(jsonStr2, '*');
+        web.window.postMessage(jsonStr.jsify(), '*'.toJS);
+        web.window.postMessage(jsonStr2.jsify(), '*'.toJS);
 
         if (widget.otherOptions.dropZoneHeight != null ||
             widget.otherOptions.dropZoneWidth != null) {
@@ -1023,7 +1022,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       dataDimension['width'] = '${width.round()}';
     }
     final jsonDimension = _jsonEncoder.convert(dataDimension);
-    html.window.postMessage(jsonDimension, '*');
+    web.window.postMessage(jsonDimension.jsify(), '*'.toJS);
   }
 
   @override
