@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/src/mixin/link_overlay_mixin.dart';
+import 'package:html_editor_enhanced/src/widgets/link_edit_dialog_overlay.dart';
 import 'package:middle_ellipsis_text/middle_ellipsis_text.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:web/web.dart' as web;
@@ -11,7 +13,7 @@ typedef CustomLinkButtonBuilder = Widget Function(
   VoidCallback onPressed,
 );
 
-class LinkTooltipOverlay {
+class LinkTooltipOverlay with LinkOverlay {
   OverlayEntry? _entry;
   final _jsonEncoder = const JsonEncoder();
 
@@ -27,6 +29,7 @@ class LinkTooltipOverlay {
   final double tooltipHeight;
   final double tooltipMarginTop;
   final double tooltipHorizontalMargin;
+  final LinkEditDialogOverlay? linkEditDialogOverlay;
 
   LinkTooltipOverlay({
     this.removeLinkButtonBuilder,
@@ -41,6 +44,7 @@ class LinkTooltipOverlay {
     this.linkPrefixLabelStyle,
     this.linkLabelStyle,
     this.editLinkLabelStyle,
+    this.linkEditDialogOverlay,
   });
 
   void show(
@@ -48,12 +52,13 @@ class LinkTooltipOverlay {
     String href,
     web.DOMRect rect, {
     String? iframeId,
+    String? text,
   }) {
     if (_entry != null) {
       hide();
       Future.microtask(() {
         if (context.mounted) {
-          show(context, href, rect, iframeId: iframeId);
+          show(context, href, rect, text: text, iframeId: iframeId);
         }
       });
       return;
@@ -68,17 +73,17 @@ class LinkTooltipOverlay {
         ? viewportWidth - tooltipHorizontalMargin * 2
         : tooltipBaseWidth;
 
-    rect = _adjustRectForIframe(rect, iframeId: iframeId);
+    final adjustRect = adjustRectForIframe(rect, iframeId: iframeId);
 
     final bool showAbove =
-        (rect.bottom.toDouble() + tooltipHeight + tooltipMarginTop) >
+        (adjustRect.bottom.toDouble() + tooltipHeight + tooltipMarginTop) >
             viewportHeight;
 
     final double tooltipTop = showAbove
-        ? rect.top.toDouble() - tooltipHeight - tooltipMarginTop
-        : rect.bottom.toDouble() + tooltipMarginTop;
+        ? adjustRect.top.toDouble() - tooltipHeight - tooltipMarginTop
+        : adjustRect.bottom.toDouble() + tooltipMarginTop;
 
-    double tooltipLeft = rect.left.toDouble();
+    double tooltipLeft = adjustRect.left.toDouble();
     if (tooltipLeft + tooltipWidth > viewportWidth) {
       tooltipLeft = viewportWidth - tooltipWidth - tooltipHorizontalMargin;
     }
@@ -115,29 +120,36 @@ class LinkTooltipOverlay {
                 top: tooltipTop,
                 child: PointerInterceptor(
                   child: Material(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(10),
+                    ),
                     child: Container(
                       padding: const EdgeInsetsDirectional.only(
                         start: 12,
                         end: 8,
                       ),
-                      width: tooltipWidth,
                       height: tooltipHeight,
+                      constraints: BoxConstraints(maxWidth: tooltipWidth),
                       decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE6E1E5)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.16),
-                              blurRadius: 23,
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 2,
-                            ),
-                          ]),
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
+                        border: Border.all(color: const Color(0xFFE6E1E5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.16),
+                            blurRadius: 23,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           if (linkPrefixLabel.isNotEmpty)
                             Padding(
@@ -156,7 +168,7 @@ class LinkTooltipOverlay {
                                 maxLines: 1,
                               ),
                             ),
-                          Expanded(
+                          Flexible(
                             child: InkWell(
                               onTap: () => _onClickLink(href),
                               child: MiddleEllipsisText(
@@ -176,12 +188,21 @@ class LinkTooltipOverlay {
                           if (editLinkButtonBuilder != null)
                             editLinkButtonBuilder!(
                               href,
-                              () => _onEditLink(href, iframeId: iframeId),
+                              () => _onEditLink(
+                                context,
+                                href,
+                                rect,
+                                text: text,
+                                iframeId: iframeId,
+                              ),
                             )
                           else
                             TextButton(
                               onPressed: () => _onEditLink(
+                                context,
                                 href,
+                                rect,
+                                text: text,
                                 iframeId: iframeId,
                               ),
                               child: Text(
@@ -231,25 +252,6 @@ class LinkTooltipOverlay {
     overlay?.insert(_entry!);
   }
 
-  web.DOMRect _adjustRectForIframe(web.DOMRect rect, {String? iframeId}) {
-    web.Element? iframeEl;
-    if (iframeId != null && iframeId.isNotEmpty) {
-      iframeEl = web.document.getElementById(iframeId);
-    }
-    iframeEl ??= web.document.querySelector('iframe');
-
-    if (iframeEl is web.HTMLIFrameElement) {
-      final iframeRect = iframeEl.getBoundingClientRect();
-      return web.DOMRect(
-        rect.x + iframeRect.x,
-        rect.y + iframeRect.y,
-        rect.width,
-        rect.height,
-      );
-    }
-    return rect;
-  }
-
   void _onClickLink(String href) {
     try {
       hide();
@@ -257,13 +259,30 @@ class LinkTooltipOverlay {
     } catch (_) {}
   }
 
-  void _onEditLink(String href, {String? iframeId}) {
+  void _onEditLink(
+    BuildContext context,
+    String href,
+    web.DOMRect rect, {
+    String? iframeId,
+    String? text,
+  }) {
     try {
       hide();
-      _postMessageToIframe(
-        'editLink',
-        href,
+
+      linkEditDialogOverlay?.show(
+        context: context,
+        rect: rect,
+        initialText: text,
+        initialUrl: href,
         iframeId: iframeId,
+        onApply: (text, url) {
+          _postMessageToIframe(
+            'updateLink',
+            href,
+            iframeId: iframeId,
+            data: {'text': text, 'url': url},
+          );
+        },
       );
     } catch (_) {}
   }
@@ -279,11 +298,17 @@ class LinkTooltipOverlay {
     } catch (_) {}
   }
 
-  void _postMessageToIframe(String type, String href, {String? iframeId}) {
+  void _postMessageToIframe(
+    String type,
+    String href, {
+    String? iframeId,
+    Map<String, dynamic>? data,
+  }) {
     final messageAsJson = _jsonEncoder.convert({
       if (iframeId != null) 'view': iframeId,
       'type': 'toIframe: $type',
       'href': href,
+      if (data != null) ...data,
     });
     web.window.postMessage(messageAsJson.jsify(), '*'.toJS);
   }

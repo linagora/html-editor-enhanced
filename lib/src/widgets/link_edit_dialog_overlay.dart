@@ -1,0 +1,332 @@
+import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/src/mixin/link_overlay_mixin.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
+import 'package:web/web.dart' as web;
+
+typedef OnApplyLink = void Function(String text, String url);
+
+class LinkEditDialogOverlay with LinkOverlay {
+  OverlayEntry? _entry;
+  TextEditingController? _textController;
+  TextEditingController? _urlController;
+  ValueNotifier<bool>? _isApplyEnabled;
+
+  final double dialogBaseWidth;
+  final double dialogHeight;
+  final double dialogMarginTop;
+  final double dialogHorizontalMargin;
+  final String hintText;
+  final String hintUrl;
+  final String applyButtonLabel;
+  final TextStyle? hintTextStyle;
+  final TextStyle? inputTextStyle;
+  final TextStyle? applyButtonTextStyle;
+  final Color? inputBackgroundColor;
+  final Color? backgroundColor;
+  final Widget? textPrefixIcon;
+  final Widget? urlPrefixIcon;
+
+  LinkEditDialogOverlay({
+    this.dialogBaseWidth = 411.0,
+    this.dialogHeight = 120.0,
+    this.dialogMarginTop = 4.0,
+    this.dialogHorizontalMargin = 10.0,
+    this.hintText = 'Text',
+    this.hintUrl = 'Type or paste a link',
+    this.applyButtonLabel = 'Apply',
+    this.hintTextStyle,
+    this.inputTextStyle,
+    this.applyButtonTextStyle,
+    this.inputBackgroundColor,
+    this.backgroundColor,
+    this.textPrefixIcon,
+    this.urlPrefixIcon,
+  });
+
+  void show({
+    required BuildContext context,
+    required web.DOMRect rect,
+    required OnApplyLink onApply,
+    String? initialText,
+    String? initialUrl,
+    String? iframeId,
+  }) {
+    if (_entry != null) {
+      hide();
+      Future.microtask(() {
+        if (context.mounted) {
+          show(
+            context: context,
+            rect: rect,
+            initialText: initialText,
+            initialUrl: initialUrl,
+            onApply: onApply,
+            iframeId: iframeId,
+          );
+        }
+      });
+      return;
+    }
+
+    final overlay = Overlay.maybeOf(context);
+
+    final viewportHeight = web.window.innerHeight.toDouble();
+    final viewportWidth = web.window.innerWidth.toDouble();
+
+    final dialogWidth = viewportWidth < dialogBaseWidth
+        ? viewportWidth - dialogHorizontalMargin * 2
+        : dialogBaseWidth;
+
+    final adjustRect = adjustRectForIframe(rect, iframeId: iframeId);
+
+    final bool showAbove =
+        (adjustRect.bottom.toDouble() + dialogHeight + dialogMarginTop) >
+            viewportHeight;
+
+    final double dialogTop = showAbove
+        ? adjustRect.top.toDouble() - dialogHeight - dialogMarginTop
+        : adjustRect.bottom.toDouble() + dialogMarginTop;
+
+    double dialogLeft = adjustRect.left.toDouble();
+    if (dialogLeft + dialogWidth > viewportWidth) {
+      dialogLeft = viewportWidth - dialogWidth - dialogHorizontalMargin;
+    }
+    if (dialogLeft < dialogHorizontalMargin) {
+      dialogLeft = dialogHorizontalMargin;
+    }
+
+    _textController = TextEditingController(text: initialText ?? '');
+    _urlController = TextEditingController(text: initialUrl ?? '');
+    _isApplyEnabled = ValueNotifier<bool>(
+      _urlController!.text.trim().isNotEmpty,
+    );
+
+    _urlController!.addListener(() {
+      _isApplyEnabled!.value = _urlController!.text.trim().isNotEmpty;
+    });
+
+    _entry = OverlayEntry(
+      builder: (_) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 130),
+          curve: Curves.easeOut,
+          builder: (context, opacity, child) {
+            final slide = (showAbove ? -1 : 1) * (1 - opacity) * 8;
+            return Opacity(
+              opacity: opacity,
+              child: Transform.translate(
+                offset: Offset(0, slide),
+                child: child,
+              ),
+            );
+          },
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: hide,
+                ),
+              ),
+              PositionedDirectional(
+                start: dialogLeft,
+                top: dialogTop,
+                child: PointerInterceptor(
+                  child: Material(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(8),
+                    ),
+                    child: Container(
+                      width: dialogWidth,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: backgroundColor ?? Colors.white,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.16),
+                            blurRadius: 24,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildInputRow(
+                                  icon: textPrefixIcon ??
+                                      const Icon(
+                                        Icons.text_fields,
+                                        size: 24,
+                                        color: Color(0xFF55687D),
+                                      ),
+                                  controller: _textController!,
+                                  hintText: hintText,
+                                  onSubmitted: () => _performSubmittedAction(
+                                    onApply,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                _buildInputRow(
+                                  icon: urlPrefixIcon ??
+                                      const Icon(
+                                        Icons.link,
+                                        size: 24,
+                                        color: Color(0xFF55687D),
+                                      ),
+                                  controller: _urlController!,
+                                  hintText: hintUrl,
+                                  onSubmitted: () => _performSubmittedAction(
+                                    onApply,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            alignment: AlignmentDirectional.bottomEnd,
+                            padding: const EdgeInsetsDirectional.only(
+                              bottom: 4,
+                            ),
+                            child: ValueListenableBuilder<bool>(
+                                valueListenable: _isApplyEnabled!,
+                                builder: (context, enabled, _) {
+                                  final color = enabled
+                                      ? const Color(0xFF0A84FF)
+                                      : const Color(0xFF939393);
+                                  return TextButton(
+                                    onPressed: enabled
+                                        ? () => _performApplyLink(onApply)
+                                        : null,
+                                    child: Text(
+                                      applyButtonLabel,
+                                      style: applyButtonTextStyle ??
+                                          TextStyle(
+                                            fontSize: 14,
+                                            height: 20 / 14,
+                                            letterSpacing: 0.1,
+                                            color: color,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                  );
+                                }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    overlay?.insert(_entry!);
+  }
+
+  Widget _buildInputRow({
+    required Widget icon,
+    required TextEditingController controller,
+    String? hintText,
+    VoidCallback? onSubmitted,
+  }) {
+    return Row(
+      children: [
+        icon,
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onSubmitted: (_) => onSubmitted?.call(),
+            cursorColor: const Color(0xFF0A84FF),
+            style: inputTextStyle ??
+                const TextStyle(
+                  color: Color(0xFF222222),
+                  fontSize: 14,
+                  height: 18 / 14,
+                  fontWeight: FontWeight.w400,
+                ),
+            decoration: InputDecoration(
+              hintText: hintText,
+              isDense: true,
+              hintStyle: hintTextStyle ??
+                  const TextStyle(
+                    color: Color(0xFF818C99),
+                    fontSize: 14,
+                    height: 18 / 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+              contentPadding: const EdgeInsetsDirectional.symmetric(
+                vertical: 16,
+                horizontal: 12,
+              ),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(
+                  width: 1,
+                  color: Color(0xFFE6E1E5),
+                ),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(
+                  width: 1,
+                  color: Color(0xFF0A84FF),
+                ),
+              ),
+              filled: true,
+              fillColor: inputBackgroundColor ?? Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _disposeControllers() {
+    _textController?.dispose();
+    _textController = null;
+
+    _urlController?.dispose();
+    _urlController = null;
+
+    _isApplyEnabled?.dispose();
+    _isApplyEnabled = null;
+  }
+
+  void _performApplyLink(OnApplyLink onApply) {
+    onApply(
+      _textController?.text.trim() ?? '',
+      _urlController?.text.trim() ?? '',
+    );
+    hide();
+  }
+
+  void _performSubmittedAction(OnApplyLink onApply) {
+    final url = _urlController?.text.trim() ?? '';
+    if (url.isNotEmpty) {
+      onApply(_textController?.text.trim() ?? '', url);
+      hide();
+    }
+  }
+
+  void hide() {
+    _entry?.remove();
+    _entry = null;
+    _disposeControllers();
+  }
+}

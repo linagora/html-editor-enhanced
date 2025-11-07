@@ -61,13 +61,17 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
 
   LinkTooltipOverlay? _linkTooltipOverlay;
+  LinkEditDialogOverlay? _linkEditDialogOverlay;
 
   @override
   void initState() {
     createdViewId = getRandString(10);
     widget.controller.viewId = createdViewId;
     if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
-      _linkTooltipOverlay = LinkTooltipOverlay();
+      _linkEditDialogOverlay = LinkEditDialogOverlay();
+      _linkTooltipOverlay = LinkTooltipOverlay(
+        linkEditDialogOverlay: _linkEditDialogOverlay,
+      );
     }
     initSummernote();
     super.initState();
@@ -297,7 +301,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           if (e && e.data && e.data.includes("toIframe:")) {
             var data = JSON.parse(e.data);
             if (data["view"].includes("$createdViewId")) {
-              ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleEditAndRemoveLink : ''}
+              ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleActionLink : ''}
               
               if (data["type"].includes("getText")) {
                 var str = \$('#summernote-2').summernote('code');
@@ -546,6 +550,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
         ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}
+        ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleUpdateCurrentLink : ''}
         
         function onSelectionChange() {
           let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
@@ -1052,6 +1057,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       if (data['type'] == 'toDart: linkClick') {
         final rectMap = data['rect'] as Map<String, dynamic>;
         final href = data['href'] as String;
+        final text = data['text'] as String? ?? '';
 
         final rect = web.DOMRect(
           rectMap['x']?.toDouble() ?? 0,
@@ -1064,12 +1070,15 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           context,
           href,
           rect,
+          text: text,
           iframeId: createdViewId,
         );
+        _linkEditDialogOverlay?.hide();
       }
 
       if (data['type'] == 'toDart: clickOutsideEditor') {
         _linkTooltipOverlay?.hide();
+        _linkEditDialogOverlay?.hide();
       }
     } catch (_) {}
   }
@@ -1079,6 +1088,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     _editorJSListener?.cancel();
     _summernoteOnLoadListener?.cancel();
     _linkTooltipOverlay = null;
+    _linkEditDialogOverlay = null;
     super.dispose();
   }
 }
