@@ -396,12 +396,14 @@ class JavascriptUtils {
         if (target.tagName === 'A') {
           e.preventDefault();
           const href = target.getAttribute('href') || '';
+          const text = target.textContent?.trim() || '';
           const rect = target.getBoundingClientRect();
     
           window.parent.postMessage(JSON.stringify({
             "view": "$viewId",
             "type": "toDart: linkClick",
             "href": href,
+            "text": text,
             "rect": rect
           }), "*");
           return;
@@ -416,17 +418,56 @@ class JavascriptUtils {
     });
   ''';
 
-  static const String jsHandleEditAndRemoveLink = '''
+  static const String jsHandleActionLink = '''
     if (data["type"].includes("editLink")) {
        try {
          \$('#summernote-2').summernote('linkDialog.show');
        } catch (_) {}
-    }
-    
-    if (data["type"].includes("removeLink")) {
+    } else if (data["type"].includes("updateLink")) {
+       try {
+          updateCurrentLink({ text: data.text, url: data.url });
+       } catch (_) {}
+    } else if (data["type"].includes("removeLink")) {
       try {
         \$('#summernote-2').summernote('editor.unlink');
       } catch (_) {}
+    }
+  ''';
+
+  static const String jsHandleUpdateCurrentLink = '''
+    function updateCurrentLink({ text, url }) {
+      if (!url) return;
+    
+      try {
+        \$('#summernote-2').summernote('editor.restoreRange');
+      } catch (_) {}
+    
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+    
+      let node = sel.anchorNode;
+      if (node && node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+      const anchor = node ? node.closest('a') : null;
+    
+      \$('#summernote-2').summernote('editor.beforeCommand');
+    
+      if (anchor) {
+        if (typeof text === 'string' && text.length) {
+          anchor.textContent = text;
+        }
+        anchor.setAttribute('href', url);
+      } else {
+        const fallbackText = (typeof text === 'string' && text.length)
+          ? text
+          : (sel.toString() || url);
+    
+        \$('#summernote-2').summernote('createLink', {
+          text: fallbackText,
+          url: url,
+        });
+      }
+    
+      \$('#summernote-2').summernote('editor.afterCommand');
     }
   ''';
 }
