@@ -74,6 +74,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   hint: 'Your text here...',
                   shouldEnsureVisible: true,
                   //initialText: "<p>text content initial, if any</p>",
+                  useLinkTooltipOverlay: true,
                 ),
                 htmlToolbarOptions: HtmlToolbarOptions(
                   toolbarPosition: ToolbarPosition.aboveEditor, //by default

@@ -385,4 +385,52 @@ class JavascriptUtils {
       });
     }
   ''';
+
+  static String jsHandleClickHyperLink(String viewId) => '''
+    document.addEventListener('click', function(e) {
+      try {
+        const target = e.target;
+        if (!target) return;
+    
+        // Handle link click
+        if (target.tagName === 'A') {
+          e.preventDefault();
+          const href = target.getAttribute('href') || '';
+          const rect = target.getBoundingClientRect();
+    
+          window.parent.postMessage(JSON.stringify({
+            "view": "$viewId",
+            "type": "toDart: linkClick",
+            "href": href,
+            "rect": rect
+          }), "*");
+          return;
+        }
+    
+        // Handle click outside link
+        window.parent.postMessage(JSON.stringify({
+          "view": "$viewId",
+          "type": "toDart: clickOutsideEditor"
+        }), "*");
+      } catch (_) {}
+    });
+  ''';
+
+  static const String jsHandleEditAndRemoveLink = '''
+    if (dataType.includes("editLink")) {
+       try {
+          const currentHref = document.queryCommandValue('createLink') || data.href || '';
+          const newHref = prompt('Edit link URL:', currentHref);
+          if (newHref) {
+            \$('#summernote-2').summernote('createLink', { url: newHref });
+          }
+       } catch (_) {}
+    }
+    
+    if (dataType.includes("editLink")) {
+      try {
+        \$('#summernote-2').summernote('editor.unlink');
+      } catch (_) {}
+    }
+  ''';
 }

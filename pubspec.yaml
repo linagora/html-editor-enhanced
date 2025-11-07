@@ -32,6 +32,8 @@ dependencies:
   # Enables interoperability with JavaScript (e.g., MessageEvent, JSString, HTML APIs) on Flutter Web
   web: ^1.1.1
 
+  middle_ellipsis_text: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
