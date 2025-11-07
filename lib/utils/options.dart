@@ -31,6 +31,7 @@ class HtmlEditorOptions {
     this.cacheHTMLAssetOffline = false,
     this.normalizeHtmlTextWhenPasting = false,
     this.normalizeHtmlTextWhenDropping = false,
+    this.useLinkTooltipOverlay = false,
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -148,6 +149,14 @@ class HtmlEditorOptions {
 
   /// Normalize HTML text when dropping
   final bool normalizeHtmlTextWhenDropping;
+
+  /// Whether to use the Flutter-native [LinkTooltipOverlay]
+  /// instead of Summernote's default link popover.
+  ///
+  /// When `true`, the editor disables Summernote's link tooltip
+  /// and shows a custom overlay built in Flutter.
+  /// Only applies on Flutter Web.
+  final bool useLinkTooltipOverlay;
 }
 
 /// Options that modify the toolbar and its behavior

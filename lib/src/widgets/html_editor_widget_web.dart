@@ -4,10 +4,10 @@ import 'dart:js_interop';
 import 'dart:ui_web';
 
 import 'package:flutter/material.dart';
-import 'package:web/web.dart' as web;
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
+import 'package:web/web.dart' as web;
 
 /// The HTML Editor widget itself, for web (uses HTMLIFrameElement)
 class HtmlEditorWidget extends StatefulWidget {
@@ -60,10 +60,15 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   StreamSubscription<web.MessageEvent>? _summernoteOnLoadListener;
   static const String _summernoteLoadedMessage = '_HtmlEditorWidgetWebState::summernoteLoaded';
 
+  LinkTooltipOverlay? _linkTooltipOverlay;
+
   @override
   void initState() {
     createdViewId = getRandString(10);
     widget.controller.viewId = createdViewId;
+    if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
+      _linkTooltipOverlay = LinkTooltipOverlay();
+    }
     initSummernote();
     super.initState();
   }
@@ -263,6 +268,11 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             disableGrammar: false,
             spellCheck: ${widget.htmlEditorOptions.spellCheck},
             maximumFileSize: $maximumFileSize,
+            ${widget.htmlEditorOptions.useLinkTooltipOverlay ? '''
+                  popover: {
+                    link: []
+                  },
+                ''' : ''}
             ${widget.htmlEditorOptions.customOptions}
             $summernoteCallbacks
           });
@@ -275,7 +285,9 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             editorHasBeenFocused = true;
           });
           
-          ${widget.htmlEditorOptions.normalizeHtmlTextWhenDropping ? JavascriptUtils.jsHandleNormalizeHtmlTextWhenDropping: ''}
+          ${widget.htmlEditorOptions.normalizeHtmlTextWhenDropping ? JavascriptUtils.jsHandleNormalizeHtmlTextWhenDropping : ''}
+          
+          ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleClickHyperLink(createdViewId) : ''}
         });
        
         window.parent.addEventListener('message', handleMessage, false);
@@ -285,6 +297,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           if (e && e.data && e.data.includes("toIframe:")) {
             var data = JSON.parse(e.data);
             if (data["view"].includes("$createdViewId")) {
+              ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleEditAndRemoveLink : ''}
+              
               if (data["type"].includes("getText")) {
                 var str = \$('#summernote-2').summernote('code');
                 window.parent.postMessage(JSON.stringify({"type": "toDart: getText", "text": str}), "*");
@@ -670,6 +684,11 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       ..style.overflow = 'hidden'
       ..style.width = '100%'
       ..style.height = '100%';
+
+    if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
+      iframe.id = createdViewId;
+    }
+
     platformViewRegistry
         .registerViewFactory(createdViewId, (int viewId) => iframe);
     setState(mounted, this.setState, () {
@@ -833,6 +852,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
       if (data['view'] != createdViewId) return;
 
+      if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
+        _handleLinkTooltipPostMessage(data);
+      }
+
       if (data['type'] != null && data['type'].contains('toDart:')) {
         if (data['type'].contains('onBeforeCommand')) {
           c.onBeforeCommand!.call(data['contents']);
@@ -887,7 +910,6 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           }
 
           try {
-
             if (base64 != null) {
               c.onImageUploadError!.call(null, base64, uploadError);
             } else {
@@ -1025,10 +1047,38 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     web.window.postMessage(jsonDimension.jsify(), '*'.toJS);
   }
 
+  void _handleLinkTooltipPostMessage(Map<String, dynamic> data) {
+    try {
+      if (data['type'] == 'toDart: linkClick') {
+        final rectMap = data['rect'] as Map<String, dynamic>;
+        final href = data['href'] as String;
+
+        final rect = web.DOMRect(
+          rectMap['x']?.toDouble() ?? 0,
+          rectMap['y']?.toDouble() ?? 0,
+          rectMap['width']?.toDouble() ?? 0,
+          rectMap['height']?.toDouble() ?? 0,
+        );
+
+        _linkTooltipOverlay?.show(
+          context,
+          href,
+          rect,
+          iframeId: createdViewId,
+        );
+      }
+
+      if (data['type'] == 'toDart: clickOutsideEditor') {
+        _linkTooltipOverlay?.hide();
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _editorJSListener?.cancel();
     _summernoteOnLoadListener?.cancel();
+    _linkTooltipOverlay = null;
     super.dispose();
   }
 }
