@@ -418,23 +418,47 @@ class JavascriptUtils {
     });
   ''';
 
-  static const String jsHandleActionLink = '''
-    if (data["type"].includes("editLink")) {
-       try {
-         \$('#summernote-2').summernote('linkDialog.show');
-       } catch (_) {}
-    } else if (data["type"].includes("updateLink")) {
-       try {
-          updateCurrentLink({ text: data.text, url: data.url });
-       } catch (_) {}
-    } else if (data["type"].includes("removeLink")) {
-      try {
-        \$('#summernote-2').summernote('editor.unlink');
-      } catch (_) {}
+  static String jsHandleDataActionForLink(
+    bool useLinkTooltipOverlay,
+    String viewId,
+  ) {
+    if (useLinkTooltipOverlay) {
+      return '''
+        if (data["type"].includes("updateLink")) {
+           try {
+              updateCurrentLink({ text: data["text"], url: data["url"] });
+           } catch (_) {}
+        } else if (data["type"].includes("removeLink")) {
+          try {
+            \$('#summernote-2').summernote('editor.unlink');
+          } catch (_) {}
+        } else if (data["type"].includes("openInsertLinkDialog")) {
+           try {
+              const rect = getCaretRect();
+              
+              window.parent.postMessage(JSON.stringify({
+                "view": "$viewId",
+                "type": "toDart: openInsertLinkDialog",
+                "rect": rect
+              }), "*");
+           } catch (_) {}
+        } 
+      ''';
+    } else {
+      return '''
+        if (data["type"].includes("openInsertLinkDialog")) {
+           try {
+              window.parent.postMessage(JSON.stringify({
+                "view": "$viewId",
+                "type": "toDart: openInsertLinkDialog"
+              }), "*");
+           } catch (_) {}
+        } 
+      ''';
     }
-  ''';
+  }
 
-  static const String jsHandleUpdateCurrentLink = '''
+  static const String jsFunctionUpdateOrInsertLink = '''
     function updateCurrentLink({ text, url }) {
       if (!url) return;
     
@@ -468,6 +492,35 @@ class JavascriptUtils {
       }
     
       \$('#summernote-2').summernote('editor.afterCommand');
+    }
+    
+    function getCaretRect() {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) {
+          throw new Error('No selection');
+        }
+    
+        const range = sel.getRangeAt(0);
+        const rects = range.getClientRects();
+        if (rects && rects.length > 0) {
+          return rects[0];
+        }
+    
+        throw new Error('No valid rects');
+      } catch (err) {
+        const editor = document.querySelector('.note-editable');
+        if (editor) {
+          const editorRect = editor.getBoundingClientRect();
+          return {
+            x: editorRect.left + 16,
+            y: editorRect.top + 32,
+            width: 0,
+            height: 0
+          };
+        }
+        return { x: 0, y: 0, width: 0, height: 0 };
+      }
     }
   ''';
 }

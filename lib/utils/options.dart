@@ -32,6 +32,7 @@ class HtmlEditorOptions {
     this.normalizeHtmlTextWhenPasting = false,
     this.normalizeHtmlTextWhenDropping = false,
     this.useLinkTooltipOverlay = false,
+    this.linkOverlayOptions = const LinkOverlayOptions(),
   });
 
   /// The editor will automatically adjust its height when the keyboard is active
@@ -157,6 +158,10 @@ class HtmlEditorOptions {
   /// and shows a custom overlay built in Flutter.
   /// Only applies on Flutter Web.
   final bool useLinkTooltipOverlay;
+
+  /// Configuration options for the custom link overlay shown
+  /// when [useLinkTooltipOverlay] is enabled.
+  final LinkOverlayOptions linkOverlayOptions;
 }
 
 /// Options that modify the toolbar and its behavior

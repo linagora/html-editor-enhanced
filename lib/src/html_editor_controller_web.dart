@@ -411,4 +411,13 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       'source': source,
     });
   }
+
+  @override
+  void openInsertLinkDialog() {
+    _evaluateJavascriptWeb(
+      data: {
+        'type': 'toIframe: openInsertLinkDialog',
+      },
+    );
+  }
 }
