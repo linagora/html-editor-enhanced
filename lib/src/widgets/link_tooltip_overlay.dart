@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/mixin/link_overlay_mixin.dart';
-import 'package:html_editor_enhanced/src/widgets/link_edit_dialog_overlay.dart';
 import 'package:middle_ellipsis_text/middle_ellipsis_text.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:web/web.dart' as web;
@@ -15,35 +12,12 @@ typedef CustomLinkButtonBuilder = Widget Function(
 
 class LinkTooltipOverlay with LinkOverlay {
   OverlayEntry? _entry;
-  final _jsonEncoder = const JsonEncoder();
 
-  final CustomLinkButtonBuilder? removeLinkButtonBuilder;
-  final CustomLinkButtonBuilder? editLinkButtonBuilder;
-  final String linkPrefixLabel;
-  final String editLinkLabel;
-  final String removeLinkTooltipMessage;
-  final TextStyle? linkPrefixLabelStyle;
-  final TextStyle? linkLabelStyle;
-  final TextStyle? editLinkLabelStyle;
-  final double tooltipBaseWidth;
-  final double tooltipHeight;
-  final double tooltipMarginTop;
-  final double tooltipHorizontalMargin;
+  final LinkTooltipOverlayOptions tooltipOverlayOptions;
   final LinkEditDialogOverlay? linkEditDialogOverlay;
 
   LinkTooltipOverlay({
-    this.removeLinkButtonBuilder,
-    this.editLinkButtonBuilder,
-    this.tooltipBaseWidth = 565.0,
-    this.tooltipHeight = 50.0,
-    this.tooltipMarginTop = 4.0,
-    this.tooltipHorizontalMargin = 10.0,
-    this.linkPrefixLabel = 'Go to:',
-    this.editLinkLabel = 'Change',
-    this.removeLinkTooltipMessage = 'Remove link',
-    this.linkPrefixLabelStyle,
-    this.linkLabelStyle,
-    this.editLinkLabelStyle,
+    this.tooltipOverlayOptions = const LinkTooltipOverlayOptions(),
     this.linkEditDialogOverlay,
   });
 
@@ -69,26 +43,31 @@ class LinkTooltipOverlay with LinkOverlay {
     final viewportHeight = web.window.innerHeight.toDouble();
     final viewportWidth = web.window.innerWidth.toDouble();
 
-    final tooltipWidth = viewportWidth < tooltipBaseWidth
-        ? viewportWidth - tooltipHorizontalMargin * 2
-        : tooltipBaseWidth;
+    final tooltipWidth = viewportWidth < tooltipOverlayOptions.tooltipBaseWidth
+        ? viewportWidth - tooltipOverlayOptions.tooltipHorizontalMargin * 2
+        : tooltipOverlayOptions.tooltipBaseWidth;
 
     final adjustRect = adjustRectForIframe(rect, iframeId: iframeId);
 
-    final bool showAbove =
-        (adjustRect.bottom.toDouble() + tooltipHeight + tooltipMarginTop) >
-            viewportHeight;
+    final bool showAbove = (adjustRect.bottom.toDouble() +
+            tooltipOverlayOptions.tooltipHeight +
+            tooltipOverlayOptions.tooltipMarginTop) >
+        viewportHeight;
 
     final double tooltipTop = showAbove
-        ? adjustRect.top.toDouble() - tooltipHeight - tooltipMarginTop
-        : adjustRect.bottom.toDouble() + tooltipMarginTop;
+        ? adjustRect.top.toDouble() -
+            tooltipOverlayOptions.tooltipHeight -
+            tooltipOverlayOptions.tooltipMarginTop
+        : adjustRect.bottom.toDouble() + tooltipOverlayOptions.tooltipMarginTop;
 
     double tooltipLeft = adjustRect.left.toDouble();
     if (tooltipLeft + tooltipWidth > viewportWidth) {
-      tooltipLeft = viewportWidth - tooltipWidth - tooltipHorizontalMargin;
+      tooltipLeft = viewportWidth -
+          tooltipWidth -
+          tooltipOverlayOptions.tooltipHorizontalMargin;
     }
-    if (tooltipLeft < tooltipHorizontalMargin) {
-      tooltipLeft = tooltipHorizontalMargin;
+    if (tooltipLeft < tooltipOverlayOptions.tooltipHorizontalMargin) {
+      tooltipLeft = tooltipOverlayOptions.tooltipHorizontalMargin;
     }
 
     _entry = OverlayEntry(
@@ -128,7 +107,7 @@ class LinkTooltipOverlay with LinkOverlay {
                         start: 12,
                         end: 8,
                       ),
-                      height: tooltipHeight,
+                      height: tooltipOverlayOptions.tooltipHeight,
                       constraints: BoxConstraints(maxWidth: tooltipWidth),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -151,12 +130,13 @@ class LinkTooltipOverlay with LinkOverlay {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (linkPrefixLabel.isNotEmpty)
+                          if (tooltipOverlayOptions.linkPrefixLabel.isNotEmpty)
                             Padding(
                               padding: const EdgeInsetsDirectional.only(end: 4),
                               child: Text(
-                                linkPrefixLabel,
-                                style: linkPrefixLabelStyle ??
+                                tooltipOverlayOptions.linkPrefixLabel,
+                                style: tooltipOverlayOptions
+                                        .linkPrefixLabelStyle ??
                                     const TextStyle(
                                       fontSize: 14,
                                       height: 18 / 14,
@@ -173,7 +153,7 @@ class LinkTooltipOverlay with LinkOverlay {
                               onTap: () => _onClickLink(href),
                               child: MiddleEllipsisText(
                                 href,
-                                style: linkLabelStyle ??
+                                style: tooltipOverlayOptions.linkLabelStyle ??
                                     const TextStyle(
                                       fontSize: 14,
                                       height: 18 / 14,
@@ -185,8 +165,9 @@ class LinkTooltipOverlay with LinkOverlay {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          if (editLinkButtonBuilder != null)
-                            editLinkButtonBuilder!(
+                          if (tooltipOverlayOptions.editLinkButtonBuilder !=
+                              null)
+                            tooltipOverlayOptions.editLinkButtonBuilder!(
                               href,
                               () => _onEditLink(
                                 context,
@@ -206,36 +187,37 @@ class LinkTooltipOverlay with LinkOverlay {
                                 iframeId: iframeId,
                               ),
                               child: Text(
-                                editLinkLabel,
-                                style: editLinkLabelStyle ??
-                                    const TextStyle(
-                                      fontSize: 14,
-                                      height: 18 / 14,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF0A84FF),
-                                    ),
+                                tooltipOverlayOptions.editLinkLabel,
+                                style:
+                                    tooltipOverlayOptions.editLinkLabelStyle ??
+                                        const TextStyle(
+                                          fontSize: 14,
+                                          height: 18 / 14,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color(0xFF0A84FF),
+                                        ),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                               ),
                             ),
-                          if (removeLinkButtonBuilder != null)
-                            removeLinkButtonBuilder!(
+                          if (tooltipOverlayOptions.removeLinkButtonBuilder !=
+                              null)
+                            tooltipOverlayOptions.removeLinkButtonBuilder!(
                               href,
-                              () => _onRemoveLink(href, iframeId: iframeId),
+                              () => _onRemoveLink(iframeId: iframeId),
                             )
                           else
                             IconButton(
-                              onPressed: () => _onRemoveLink(
-                                href,
-                                iframeId: iframeId,
-                              ),
+                              onPressed: () =>
+                                  _onRemoveLink(iframeId: iframeId),
                               icon: const Icon(
                                 Icons.link_off,
                                 size: 20,
                                 color: Color(0xFF007AFF),
                               ),
-                              tooltip: removeLinkTooltipMessage,
+                              tooltip: tooltipOverlayOptions
+                                  .removeLinkTooltipMessage,
                             ),
                         ],
                       ),
@@ -275,42 +257,15 @@ class LinkTooltipOverlay with LinkOverlay {
         initialText: text,
         initialUrl: href,
         iframeId: iframeId,
-        onApply: (text, url) {
-          _postMessageToIframe(
-            'updateLink',
-            href,
-            iframeId: iframeId,
-            data: {'text': text, 'url': url},
-          );
-        },
       );
     } catch (_) {}
   }
 
-  void _onRemoveLink(String href, {String? iframeId}) {
+  void _onRemoveLink({String? iframeId}) {
     try {
       hide();
-      _postMessageToIframe(
-        'removeLink',
-        href,
-        iframeId: iframeId,
-      );
+      postMessageToIframe('removeLink', iframeId: iframeId);
     } catch (_) {}
-  }
-
-  void _postMessageToIframe(
-    String type,
-    String href, {
-    String? iframeId,
-    Map<String, dynamic>? data,
-  }) {
-    final messageAsJson = _jsonEncoder.convert({
-      if (iframeId != null) 'view': iframeId,
-      'type': 'toIframe: $type',
-      'href': href,
-      if (data != null) ...data,
-    });
-    web.window.postMessage(messageAsJson.jsify(), '*'.toJS);
   }
 
   void hide() {

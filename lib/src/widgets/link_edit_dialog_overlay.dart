@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/mixin/link_overlay_mixin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:web/web.dart' as web;
-
-typedef OnApplyLink = void Function(String text, String url);
 
 class LinkEditDialogOverlay with LinkOverlay {
   OverlayEntry? _entry;
@@ -11,42 +10,15 @@ class LinkEditDialogOverlay with LinkOverlay {
   TextEditingController? _urlController;
   ValueNotifier<bool>? _isApplyEnabled;
 
-  final double dialogBaseWidth;
-  final double dialogHeight;
-  final double dialogMarginTop;
-  final double dialogHorizontalMargin;
-  final String hintText;
-  final String hintUrl;
-  final String applyButtonLabel;
-  final TextStyle? hintTextStyle;
-  final TextStyle? inputTextStyle;
-  final TextStyle? applyButtonTextStyle;
-  final Color? inputBackgroundColor;
-  final Color? backgroundColor;
-  final Widget? textPrefixIcon;
-  final Widget? urlPrefixIcon;
+  final LinkEditDialogOverlayOptions dialogOverlayOptions;
 
   LinkEditDialogOverlay({
-    this.dialogBaseWidth = 411.0,
-    this.dialogHeight = 120.0,
-    this.dialogMarginTop = 4.0,
-    this.dialogHorizontalMargin = 10.0,
-    this.hintText = 'Text',
-    this.hintUrl = 'Type or paste a link',
-    this.applyButtonLabel = 'Apply',
-    this.hintTextStyle,
-    this.inputTextStyle,
-    this.applyButtonTextStyle,
-    this.inputBackgroundColor,
-    this.backgroundColor,
-    this.textPrefixIcon,
-    this.urlPrefixIcon,
+    this.dialogOverlayOptions = const LinkEditDialogOverlayOptions(),
   });
 
   void show({
     required BuildContext context,
     required web.DOMRect rect,
-    required OnApplyLink onApply,
     String? initialText,
     String? initialUrl,
     String? iframeId,
@@ -60,7 +32,6 @@ class LinkEditDialogOverlay with LinkOverlay {
             rect: rect,
             initialText: initialText,
             initialUrl: initialUrl,
-            onApply: onApply,
             iframeId: iframeId,
           );
         }
@@ -73,26 +44,31 @@ class LinkEditDialogOverlay with LinkOverlay {
     final viewportHeight = web.window.innerHeight.toDouble();
     final viewportWidth = web.window.innerWidth.toDouble();
 
-    final dialogWidth = viewportWidth < dialogBaseWidth
-        ? viewportWidth - dialogHorizontalMargin * 2
-        : dialogBaseWidth;
+    final dialogWidth = viewportWidth < dialogOverlayOptions.dialogBaseWidth
+        ? viewportWidth - dialogOverlayOptions.dialogHorizontalMargin * 2
+        : dialogOverlayOptions.dialogBaseWidth;
 
     final adjustRect = adjustRectForIframe(rect, iframeId: iframeId);
 
-    final bool showAbove =
-        (adjustRect.bottom.toDouble() + dialogHeight + dialogMarginTop) >
-            viewportHeight;
+    final bool showAbove = (adjustRect.bottom.toDouble() +
+            dialogOverlayOptions.dialogHeight +
+            dialogOverlayOptions.dialogMarginTop) >
+        viewportHeight;
 
     final double dialogTop = showAbove
-        ? adjustRect.top.toDouble() - dialogHeight - dialogMarginTop
-        : adjustRect.bottom.toDouble() + dialogMarginTop;
+        ? adjustRect.top.toDouble() -
+            dialogOverlayOptions.dialogHeight -
+            dialogOverlayOptions.dialogMarginTop
+        : adjustRect.bottom.toDouble() + dialogOverlayOptions.dialogMarginTop;
 
     double dialogLeft = adjustRect.left.toDouble();
     if (dialogLeft + dialogWidth > viewportWidth) {
-      dialogLeft = viewportWidth - dialogWidth - dialogHorizontalMargin;
+      dialogLeft = viewportWidth -
+          dialogWidth -
+          dialogOverlayOptions.dialogHorizontalMargin;
     }
-    if (dialogLeft < dialogHorizontalMargin) {
-      dialogLeft = dialogHorizontalMargin;
+    if (dialogLeft < dialogOverlayOptions.dialogHorizontalMargin) {
+      dialogLeft = dialogOverlayOptions.dialogHorizontalMargin;
     }
 
     _textController = TextEditingController(text: initialText ?? '');
@@ -141,7 +117,8 @@ class LinkEditDialogOverlay with LinkOverlay {
                       width: dialogWidth,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: backgroundColor ?? Colors.white,
+                        color: dialogOverlayOptions.backgroundColor ??
+                            Colors.white,
                         borderRadius: const BorderRadius.all(
                           Radius.circular(8),
                         ),
@@ -165,30 +142,30 @@ class LinkEditDialogOverlay with LinkOverlay {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 _buildInputRow(
-                                  icon: textPrefixIcon ??
+                                  icon: dialogOverlayOptions.textPrefixIcon ??
                                       const Icon(
                                         Icons.text_fields,
                                         size: 24,
                                         color: Color(0xFF55687D),
                                       ),
                                   controller: _textController!,
-                                  hintText: hintText,
+                                  hintText: dialogOverlayOptions.hintText,
                                   onSubmitted: () => _performSubmittedAction(
-                                    onApply,
+                                    iframeId: iframeId,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 _buildInputRow(
-                                  icon: urlPrefixIcon ??
+                                  icon: dialogOverlayOptions.urlPrefixIcon ??
                                       const Icon(
                                         Icons.link,
                                         size: 24,
                                         color: Color(0xFF55687D),
                                       ),
                                   controller: _urlController!,
-                                  hintText: hintUrl,
+                                  hintText: dialogOverlayOptions.hintUrl,
                                   onSubmitted: () => _performSubmittedAction(
-                                    onApply,
+                                    iframeId: iframeId,
                                   ),
                                 ),
                               ],
@@ -207,11 +184,14 @@ class LinkEditDialogOverlay with LinkOverlay {
                                       : const Color(0xFF939393);
                                   return TextButton(
                                     onPressed: enabled
-                                        ? () => _performApplyLink(onApply)
+                                        ? () => _performApplyLink(
+                                              iframeId: iframeId,
+                                            )
                                         : null,
                                     child: Text(
-                                      applyButtonLabel,
-                                      style: applyButtonTextStyle ??
+                                      dialogOverlayOptions.applyButtonLabel,
+                                      style: dialogOverlayOptions
+                                              .applyButtonTextStyle ??
                                           TextStyle(
                                             fontSize: 14,
                                             height: 20 / 14,
@@ -253,7 +233,7 @@ class LinkEditDialogOverlay with LinkOverlay {
             controller: controller,
             onSubmitted: (_) => onSubmitted?.call(),
             cursorColor: const Color(0xFF0A84FF),
-            style: inputTextStyle ??
+            style: dialogOverlayOptions.inputTextStyle ??
                 const TextStyle(
                   color: Color(0xFF222222),
                   fontSize: 14,
@@ -263,7 +243,7 @@ class LinkEditDialogOverlay with LinkOverlay {
             decoration: InputDecoration(
               hintText: hintText,
               isDense: true,
-              hintStyle: hintTextStyle ??
+              hintStyle: dialogOverlayOptions.hintTextStyle ??
                   const TextStyle(
                     color: Color(0xFF818C99),
                     fontSize: 14,
@@ -289,7 +269,8 @@ class LinkEditDialogOverlay with LinkOverlay {
                 ),
               ),
               filled: true,
-              fillColor: inputBackgroundColor ?? Colors.white,
+              fillColor:
+                  dialogOverlayOptions.inputBackgroundColor ?? Colors.white,
             ),
           ),
         ),
@@ -308,20 +289,25 @@ class LinkEditDialogOverlay with LinkOverlay {
     _isApplyEnabled = null;
   }
 
-  void _performApplyLink(OnApplyLink onApply) {
-    onApply(
-      _textController?.text.trim() ?? '',
-      _urlController?.text.trim() ?? '',
-    );
-    hide();
-  }
-
-  void _performSubmittedAction(OnApplyLink onApply) {
+  void _performApplyLink({String? iframeId}) {
+    final text = _textController?.text.trim() ?? '';
     final url = _urlController?.text.trim() ?? '';
+
     if (url.isNotEmpty) {
-      onApply(_textController?.text.trim() ?? '', url);
+      postMessageToIframe(
+        'updateLink',
+        iframeId: iframeId,
+        data: {
+          'text': text.isEmpty ? url : text,
+          'url': url,
+        },
+      );
       hide();
     }
+  }
+
+  void _performSubmittedAction({String? iframeId}) {
+    _performApplyLink(iframeId: iframeId);
   }
 
   void hide() {

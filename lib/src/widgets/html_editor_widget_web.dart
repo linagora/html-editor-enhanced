@@ -68,9 +68,14 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
     createdViewId = getRandString(10);
     widget.controller.viewId = createdViewId;
     if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
-      _linkEditDialogOverlay = LinkEditDialogOverlay();
+      _linkEditDialogOverlay = LinkEditDialogOverlay(
+        dialogOverlayOptions:
+            widget.htmlEditorOptions.linkOverlayOptions.editDialogOptions,
+      );
       _linkTooltipOverlay = LinkTooltipOverlay(
         linkEditDialogOverlay: _linkEditDialogOverlay,
+        tooltipOverlayOptions:
+            widget.htmlEditorOptions.linkOverlayOptions.tooltipOptions,
       );
     }
     initSummernote();
@@ -301,7 +306,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           if (e && e.data && e.data.includes("toIframe:")) {
             var data = JSON.parse(e.data);
             if (data["view"].includes("$createdViewId")) {
-              ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleActionLink : ''}
+              ${JavascriptUtils.jsHandleDataActionForLink(widget.htmlEditorOptions.useLinkTooltipOverlay, createdViewId)}
               
               if (data["type"].includes("getText")) {
                 var str = \$('#summernote-2').summernote('code');
@@ -550,7 +555,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         ${JavascriptUtils.jsDetectBrowser}
         ${JavascriptUtils.jsHandleSetFontSize}
         ${JavascriptUtils.jsHandleInsertImageWithSafeSignature}
-        ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleUpdateCurrentLink : ''}
+        ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsFunctionUpdateOrInsertLink : ''}
         
         function onSelectionChange() {
           let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
@@ -1054,7 +1059,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
   void _handleLinkTooltipPostMessage(Map<String, dynamic> data) {
     try {
-      if (data['type'] == 'toDart: linkClick') {
+      final dataType = data['type'];
+      if (dataType == 'toDart: linkClick') {
         final rectMap = data['rect'] as Map<String, dynamic>;
         final href = data['href'] as String;
         final text = data['text'] as String? ?? '';
@@ -1074,11 +1080,43 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           iframeId: createdViewId,
         );
         _linkEditDialogOverlay?.hide();
-      }
-
-      if (data['type'] == 'toDart: clickOutsideEditor') {
+      } else if (dataType == 'toDart: clickOutsideEditor') {
         _linkTooltipOverlay?.hide();
         _linkEditDialogOverlay?.hide();
+      } else if (dataType == 'toDart: openInsertLinkDialog') {
+        if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
+          final rectMap = data['rect'] as Map<String, dynamic>;
+
+          final rect = web.DOMRect(
+            rectMap['x']?.toDouble() ?? 0,
+            rectMap['y']?.toDouble() ?? 0,
+            rectMap['width']?.toDouble() ?? 0,
+            rectMap['height']?.toDouble() ?? 0,
+          );
+
+          _linkEditDialogOverlay?.show(
+            context: context,
+            rect: rect,
+            iframeId: createdViewId,
+          );
+          _linkTooltipOverlay?.hide();
+        } else {
+          InsertLinkDialog(
+            context: context,
+            linkInsertInterceptor: (text, url, openNewTab) async {
+              final result =
+                  await widget.htmlToolbarOptions.linkInsertInterceptor?.call(
+                text,
+                url,
+                openNewTab,
+              );
+              return result ?? true;
+            },
+            onInsert: (text, url, openNewTab) {
+              widget.controller.insertLink(text, url, openNewTab);
+            },
+          ).show();
+        }
       }
     } catch (_) {}
   }

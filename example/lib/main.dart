@@ -209,7 +209,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             Theme.of(context).colorScheme.secondary),
                     onPressed: () async {
                       var txt = await controller.getText();
-                      if (txt.contains('src=\"data:')) {
+                      if (txt.contains('src="data:')) {
                         txt =
                             '<text removed due to base-64 data, displaying the text could cause the app to crash>';
                       }
@@ -282,6 +282,17 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                    onPressed: controller.openInsertLinkDialog,
+                    child: const Text(
+                      'Open Insert Link',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   TextButton(
                     style: TextButton.styleFrom(
                         backgroundColor:

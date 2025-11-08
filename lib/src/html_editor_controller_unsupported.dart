@@ -201,4 +201,7 @@ class HtmlEditorController {
 
   /// Set drag and drop event listener
   void setOnDragDropEvent() {}
+
+  /// Opens the insert link dialog inside the editor.
+  void openInsertLinkDialog() {}
 }
