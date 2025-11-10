@@ -5,11 +5,6 @@ import 'package:middle_ellipsis_text/middle_ellipsis_text.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:web/web.dart' as web;
 
-typedef CustomLinkButtonBuilder = Widget Function(
-  String href,
-  VoidCallback onPressed,
-);
-
 class LinkTooltipOverlay with LinkOverlay {
   OverlayEntry? _entry;
 
@@ -37,6 +32,9 @@ class LinkTooltipOverlay with LinkOverlay {
       });
       return;
     }
+
+    LinkOverlayManager.instance.hideOthers(LinkOverlayType.tooltip, this);
+    LinkOverlayManager.instance.register(LinkOverlayType.tooltip, this);
 
     final overlay = Overlay.maybeOf(context);
 
@@ -271,5 +269,6 @@ class LinkTooltipOverlay with LinkOverlay {
   void hide() {
     _entry?.remove();
     _entry = null;
+    LinkOverlayManager.instance.unregister(LinkOverlayType.tooltip, this);
   }
 }

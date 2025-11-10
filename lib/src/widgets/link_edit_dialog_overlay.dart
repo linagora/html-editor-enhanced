@@ -39,6 +39,9 @@ class LinkEditDialogOverlay with LinkOverlay {
       return;
     }
 
+    LinkOverlayManager.instance.hideOthers(LinkOverlayType.editDialog, this);
+    LinkOverlayManager.instance.register(LinkOverlayType.editDialog, this);
+
     final overlay = Overlay.maybeOf(context);
 
     final viewportHeight = web.window.innerHeight.toDouble();
@@ -115,7 +118,8 @@ class LinkEditDialogOverlay with LinkOverlay {
                     ),
                     child: Container(
                       width: dialogWidth,
-                      padding: const EdgeInsets.all(16),
+                      padding: dialogOverlayOptions.dialogPadding ??
+                          const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: dialogOverlayOptions.backgroundColor ??
                             Colors.white,
@@ -191,7 +195,8 @@ class LinkEditDialogOverlay with LinkOverlay {
                                     child: Text(
                                       dialogOverlayOptions.applyButtonLabel,
                                       style: dialogOverlayOptions
-                                              .applyButtonTextStyle ??
+                                              .applyButtonTextStyle
+                                              ?.call(enabled) ??
                                           TextStyle(
                                             fontSize: 14,
                                             height: 20 / 14,
@@ -232,7 +237,8 @@ class LinkEditDialogOverlay with LinkOverlay {
           child: TextField(
             controller: controller,
             onSubmitted: (_) => onSubmitted?.call(),
-            cursorColor: const Color(0xFF0A84FF),
+            cursorColor:
+                dialogOverlayOptions.cursorColor ?? const Color(0xFF0A84FF),
             style: dialogOverlayOptions.inputTextStyle ??
                 const TextStyle(
                   color: Color(0xFF222222),
@@ -254,20 +260,30 @@ class LinkEditDialogOverlay with LinkOverlay {
                 vertical: 16,
                 horizontal: 12,
               ),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(
-                  width: 1,
-                  color: Color(0xFFE6E1E5),
-                ),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(
-                  width: 1,
-                  color: Color(0xFF0A84FF),
-                ),
-              ),
+              enabledBorder: dialogOverlayOptions.enabledBorder ??
+                  const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFFE6E1E5),
+                    ),
+                  ),
+              border: dialogOverlayOptions.border ??
+                  const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFFE6E1E5),
+                    ),
+                  ),
+              focusedBorder: dialogOverlayOptions.focusedBorder ??
+                  const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFF0A84FF),
+                    ),
+                  ),
               filled: true,
               fillColor:
                   dialogOverlayOptions.inputBackgroundColor ?? Colors.white,
@@ -314,5 +330,6 @@ class LinkEditDialogOverlay with LinkOverlay {
     _entry?.remove();
     _entry = null;
     _disposeControllers();
+    LinkOverlayManager.instance.unregister(LinkOverlayType.editDialog, this);
   }
 }

@@ -1,5 +1,11 @@
-import 'package:flutter/cupertino.dart';
-import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:flutter/material.dart';
+
+typedef CustomLinkButtonBuilder = Widget Function(
+  String href,
+  VoidCallback onPressed,
+);
+
+typedef CustomTextStyleBuilder = TextStyle Function(bool isEnabled);
 
 class LinkOverlayOptions {
   final LinkTooltipOverlayOptions tooltipOptions;
@@ -51,11 +57,16 @@ class LinkEditDialogOverlayOptions {
   final String applyButtonLabel;
   final TextStyle? hintTextStyle;
   final TextStyle? inputTextStyle;
-  final TextStyle? applyButtonTextStyle;
+  final CustomTextStyleBuilder? applyButtonTextStyle;
   final Color? inputBackgroundColor;
   final Color? backgroundColor;
+  final Color? cursorColor;
   final Widget? textPrefixIcon;
   final Widget? urlPrefixIcon;
+  final InputBorder? border;
+  final InputBorder? enabledBorder;
+  final InputBorder? focusedBorder;
+  final EdgeInsetsGeometry? dialogPadding;
 
   const LinkEditDialogOverlayOptions({
     this.dialogBaseWidth = 411.0,
@@ -69,8 +80,13 @@ class LinkEditDialogOverlayOptions {
     this.inputTextStyle,
     this.applyButtonTextStyle,
     this.inputBackgroundColor,
+    this.cursorColor,
     this.backgroundColor,
     this.textPrefixIcon,
     this.urlPrefixIcon,
+    this.border,
+    this.enabledBorder,
+    this.focusedBorder,
+    this.dialogPadding,
   });
 }
