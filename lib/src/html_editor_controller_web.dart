@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/html_editor_controller_unsupported.dart'
     as unsupported;
+import 'package:html_editor_enhanced/utils/web_utils.dart';
 import 'package:meta/meta.dart';
 import 'package:web/web.dart' as web;
 
@@ -31,10 +32,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: getText'});
 
     final event = await web.window.onMessage.firstWhere((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data['type'] == 'toDart: getText';
     });
-    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    final data = WebUtils.convertMessageEventToDataMap(event);
     String text = data['text'];
 
     if (processOutputHtml &&
@@ -53,10 +54,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: getTextWithSignatureContent'});
 
     final event = await web.window.onMessage.firstWhere((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data['type'] == 'toDart: getTextWithSignatureContent';
     });
-    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    final data = WebUtils.convertMessageEventToDataMap(event);
     String text = data['text'];
 
     if (processOutputHtml &&
@@ -77,10 +78,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
       _evaluateJavascriptWeb(data: {'type': 'toIframe: getSelectedText'});
     }
     final event = await web.window.onMessage.firstWhere((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data['type'] == 'toDart: getSelectedText';
     });
-    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    final data = WebUtils.convertMessageEventToDataMap(event);
     String selectedText = data['text'];
     return selectedText;
   }
@@ -104,10 +105,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   Future<bool> isFullScreen() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: isFullScreen'});
     final event = await web.window.onMessage.firstWhere((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data['type'] == 'toDart: isFullScreen';
     });
-    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    final data = WebUtils.convertMessageEventToDataMap(event);
     bool isFullScreen = data['value'];
     return isFullScreen;
   }
@@ -142,10 +143,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
   Future<bool> isActivatedCodeView() async {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: isActivatedCodeView'});
     final event = await web.window.onMessage.firstWhere((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data['type'] == 'toDart: isActivatedCodeView';
     });
-    final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+    final data = WebUtils.convertMessageEventToDataMap(event);
     bool isActivated = data['value'];
     return isActivated;
   }
@@ -282,10 +283,10 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     _evaluateJavascriptWeb(data: {'type': 'toIframe: $name'});
     if (hasReturnValue) {
       final event = await web.window.onMessage.firstWhere((event) {
-        final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+        final data = WebUtils.convertMessageEventToDataMap(event);
         return data['type'] == 'toDart: $name';
       });
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
       return data;
     }
   }
