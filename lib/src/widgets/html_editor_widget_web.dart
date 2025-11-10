@@ -5,8 +5,12 @@ import 'dart:ui_web';
 
 import 'package:flutter/material.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html_editor_enhanced/src/widgets/insert_link_dialog.dart';
+import 'package:html_editor_enhanced/src/widgets/link_edit_dialog_overlay.dart';
+import 'package:html_editor_enhanced/src/widgets/link_tooltip_overlay.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
+import 'package:html_editor_enhanced/utils/web_utils.dart';
 import 'package:web/web.dart' as web;
 
 /// The HTML Editor widget itself, for web (uses HTMLIFrameElement)
@@ -141,7 +145,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           ''';
         if (p.onSelect != null) {
           web.window.onMessage.listen((event) {
-            final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+            final data = WebUtils.convertMessageEventToDataMap(event);
 
             if (data['type'] != null &&
                 data['type'].contains('toDart:') &&
@@ -858,7 +862,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   /// Adds an event listener to check when a callback is fired
   void addJSListener(Callbacks c) {
     _editorJSListener = web.window.onMessage.listen((event) {
-      final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+      final data = WebUtils.convertMessageEventToDataMap(event);
 
       if (data['view'] != createdViewId) return;
 
@@ -999,7 +1003,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         var jsonStr = _jsonEncoder.convert(data);
         var jsonStr2 = _jsonEncoder.convert(data2);
         _summernoteOnLoadListener = web.window.onMessage.listen((event) {
-          final data = HtmlEditorUtils.convertMessageEventToDataMap(event);
+          final data = WebUtils.convertMessageEventToDataMap(event);
 
           if (data['type'] != null &&
               data['type'].contains('toDart: onChangeContent') &&

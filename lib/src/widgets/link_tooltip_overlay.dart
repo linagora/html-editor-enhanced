@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/mixin/link_overlay_mixin.dart';
+import 'package:html_editor_enhanced/src/widgets/link_edit_dialog_overlay.dart';
 import 'package:middle_ellipsis_text/middle_ellipsis_text.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:web/web.dart' as web;
