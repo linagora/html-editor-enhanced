@@ -1081,8 +1081,20 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
         );
         _linkEditDialogOverlay?.hide();
       } else if (dataType == 'toDart: clickOutsideEditor') {
-        _linkTooltipOverlay?.hide();
-        _linkEditDialogOverlay?.hide();
+        if (_linkTooltipOverlay != null) {
+          _linkTooltipOverlay!.hide();
+          LinkOverlayManager.instance.hideOthers(
+            LinkOverlayType.tooltip,
+            _linkTooltipOverlay,
+          );
+        }
+        if (_linkEditDialogOverlay != null) {
+          _linkEditDialogOverlay!.hide();
+          LinkOverlayManager.instance.hideOthers(
+            LinkOverlayType.editDialog,
+            _linkEditDialogOverlay,
+          );
+        }
       } else if (dataType == 'toDart: openInsertLinkDialog') {
         if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
           final rectMap = data['rect'] as Map<String, dynamic>;
