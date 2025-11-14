@@ -1,3 +1,8 @@
+## [3.3.1] - 2025-11-14
+
+### Changed
+- Upgrade `visibility_detector` version to `^0.4.0+2`
+
 ## [3.3.0] - 2025-08-24
 
 - Support flutter version `3.32.8`
