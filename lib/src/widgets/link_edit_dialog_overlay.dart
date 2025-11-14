@@ -8,6 +8,10 @@ class LinkEditDialogOverlay with LinkOverlay {
   OverlayEntry? _entry;
   TextEditingController? _textController;
   TextEditingController? _urlController;
+  FocusNode? _textFocusNode;
+  FocusNode? _urlFocusNode;
+  FocusNode? _applyButtonFocusNode;
+
   ValueNotifier<bool>? _isApplyEnabled;
 
   final LinkEditDialogOverlayOptions dialogOverlayOptions;
@@ -76,6 +80,11 @@ class LinkEditDialogOverlay with LinkOverlay {
 
     _textController = TextEditingController(text: initialText ?? '');
     _urlController = TextEditingController(text: initialUrl ?? '');
+
+    _textFocusNode = FocusNode();
+    _urlFocusNode = FocusNode();
+    _applyButtonFocusNode = FocusNode();
+
     _isApplyEnabled = ValueNotifier<bool>(
       _urlController!.text.trim().isNotEmpty,
     );
@@ -153,6 +162,7 @@ class LinkEditDialogOverlay with LinkOverlay {
                                         color: Color(0xFF55687D),
                                       ),
                                   controller: _textController!,
+                                  focusNode: _textFocusNode,
                                   hintText: dialogOverlayOptions.hintText,
                                   onSubmitted: () => _performSubmittedAction(
                                     iframeId: iframeId,
@@ -167,6 +177,7 @@ class LinkEditDialogOverlay with LinkOverlay {
                                         color: Color(0xFF55687D),
                                       ),
                                   controller: _urlController!,
+                                  focusNode: _urlFocusNode,
                                   hintText: dialogOverlayOptions.hintUrl,
                                   onSubmitted: () => _performSubmittedAction(
                                     iframeId: iframeId,
@@ -192,6 +203,7 @@ class LinkEditDialogOverlay with LinkOverlay {
                                               iframeId: iframeId,
                                             )
                                         : null,
+                                    focusNode: _applyButtonFocusNode,
                                     child: Text(
                                       dialogOverlayOptions.applyButtonLabel,
                                       style: dialogOverlayOptions
@@ -226,6 +238,7 @@ class LinkEditDialogOverlay with LinkOverlay {
   Widget _buildInputRow({
     required Widget icon,
     required TextEditingController controller,
+    FocusNode? focusNode,
     String? hintText,
     VoidCallback? onSubmitted,
   }) {
@@ -236,6 +249,14 @@ class LinkEditDialogOverlay with LinkOverlay {
         Expanded(
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
+            onEditingComplete: () {
+              if (controller == _textController) {
+                _urlFocusNode?.requestFocus();
+              } else if (controller == _urlController) {
+                _applyButtonFocusNode?.requestFocus();
+              }
+            },
             onSubmitted: (_) => onSubmitted?.call(),
             cursorColor:
                 dialogOverlayOptions.cursorColor ?? const Color(0xFF0A84FF),
@@ -303,6 +324,15 @@ class LinkEditDialogOverlay with LinkOverlay {
 
     _isApplyEnabled?.dispose();
     _isApplyEnabled = null;
+
+    _textFocusNode?.dispose();
+    _textFocusNode = null;
+
+    _urlFocusNode?.dispose();
+    _urlFocusNode = null;
+
+    _applyButtonFocusNode?.dispose();
+    _applyButtonFocusNode = null;
   }
 
   void _performApplyLink({String? iframeId}) {
