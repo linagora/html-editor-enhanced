@@ -435,7 +435,7 @@ class JavascriptUtils {
         } else if (data["type"].includes("openInsertLinkDialog")) {
            try {
               const rect = getCaretRect();
-              
+              console.log(">> DAB >> getCaretRect + " + rect);
               window.parent.postMessage(JSON.stringify({
                 "view": "$viewId",
                 "type": "toDart: openInsertLinkDialog",
@@ -507,11 +507,44 @@ class JavascriptUtils {
           return rects[0];
         }
     
-        throw new Error('No valid rects');
+        const marker = document.createElement("span");
+        marker.id = "caret-marker-temp";
+        marker.style.display = "inline-block";
+        marker.style.width = "0px";
+        marker.style.height = "0px";
+        marker.style.lineHeight = "0";
+        marker.style.padding = "0";
+        marker.style.margin = "0";
+        marker.style.border = "0";
+      
+        const newRange = range.cloneRange();
+        newRange.collapse(true);
+        newRange.insertNode(marker);
+      
+        const rect = marker.getBoundingClientRect();
+        marker.parentNode.removeChild(marker);
+      
+        return rect;
       } catch (err) {
         const editor = document.querySelector('.note-editable');
         if (editor) {
           const editorRect = editor.getBoundingClientRect();
+          const isTopHidden = editorRect.top < 0;
+
+          if (isTopHidden) {
+            const centerX = rect.left + rect.width / 2;
+            const idealX = centerX - 200;  // half overlay width
+            const finalX = Math.max(idealX, centerX);
+            const finalY = rect.top + rect.height / 2;
+        
+            return {
+              x: finalX,
+              y: finalY,
+              width: 0,
+              height: 0
+            };
+          } 
+          
           return {
             x: editorRect.left + 16,
             y: editorRect.top + 32,
