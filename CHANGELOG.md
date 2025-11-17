@@ -1,3 +1,8 @@
+## [3.3.2] - 2025-11-17
+
+### Changed
+- Custom Insert Link Overlay for Summernote Editor
+
 ## [3.3.1] - 2025-11-14
 
 ### Changed
