@@ -435,11 +435,14 @@ class JavascriptUtils {
         } else if (data["type"].includes("openInsertLinkDialog")) {
            try {
               const rect = getCaretRect();
-              console.log(">> DAB >> getCaretRect + " + rect);
+              
+              const selectedText = window.getSelection().toString();
+
               window.parent.postMessage(JSON.stringify({
                 "view": "$viewId",
                 "type": "toDart: openInsertLinkDialog",
-                "rect": rect
+                "rect": rect,
+                "text": selectedText
               }), "*");
            } catch (_) {}
         } 
@@ -448,9 +451,12 @@ class JavascriptUtils {
       return '''
         if (data["type"].includes("openInsertLinkDialog")) {
            try {
+              const selectedText = window.getSelection().toString();
+              
               window.parent.postMessage(JSON.stringify({
                 "view": "$viewId",
-                "type": "toDart: openInsertLinkDialog"
+                "type": "toDart: openInsertLinkDialog",
+                "text": selectedText
               }), "*");
            } catch (_) {}
         } 

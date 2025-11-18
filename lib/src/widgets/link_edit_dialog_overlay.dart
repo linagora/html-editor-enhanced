@@ -233,6 +233,17 @@ class LinkEditDialogOverlay with LinkOverlay {
     );
 
     overlay?.insert(_entry!);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final hasText = _textController?.text.trim().isNotEmpty == true;
+      final hasUrl = _urlController?.text.trim().isNotEmpty == true;
+
+      if (hasText && !hasUrl) {
+        _urlFocusNode?.requestFocus();
+      } else {
+        _textFocusNode?.requestFocus();
+      }
+    });
   }
 
   Widget _buildInputRow({

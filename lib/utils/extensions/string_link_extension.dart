@@ -1,5 +1,5 @@
 extension StringLinkExtension on String {
-  String normalizeLinkInput() {
+  String normalizeLinkInput({bool useFallback = true}) {
     final value = trim();
     if (value.isEmpty) return value;
 
@@ -36,14 +36,18 @@ extension StringLinkExtension on String {
       return "https://$value";
     }
 
-    return "https://$value";
+    if (useFallback) {
+      return "https://$value";
+    } else {
+      return '';
+    }
   }
 
-  String safeNormalizeLinkInput() {
+  String safeNormalizeLinkInput({bool useFallback = true}) {
     try {
-      return normalizeLinkInput();
+      return normalizeLinkInput(useFallback: useFallback);
     } catch (_) {
-      return this;
+      return useFallback ? this : '';
     }
   }
 }
