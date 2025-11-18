@@ -340,12 +340,14 @@ class LinkEditDialogOverlay with LinkOverlay {
     final url = _urlController?.text.trim() ?? '';
 
     if (url.isNotEmpty) {
+      final safeUrl = url.safeNormalizeLinkInput();
+
       postMessageToIframe(
         'updateLink',
         iframeId: iframeId,
         data: {
-          'text': text.isEmpty ? url : text,
-          'url': url,
+          'text': text.isEmpty ? safeUrl : text,
+          'url': safeUrl,
         },
       );
       hide();
