@@ -283,7 +283,24 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
             maximumFileSize: $maximumFileSize,
             ${widget.htmlEditorOptions.useLinkTooltipOverlay ? '''
                   popover: {
-                    link: []
+                    image: [
+                      ["resize", ["resizeFull", "resizeHalf", "resizeQuarter", "resizeNone"]],
+                      ["float", ["floatLeft", "floatRight", "floatNone"]],
+                      ["remove", ["removeMedia"]],
+                    ],
+                    link: [],
+                    table: [
+                      ["add", ["addRowDown", "addRowUp", "addColLeft", "addColRight"]],
+                      ["delete", ["deleteRow", "deleteCol", "deleteTable"]],
+                    ],
+                    air: [
+                      ["color", ["color"]],
+                      ["font", ["bold", "underline", "clear"]],
+                      ["para", ["ul", "paragraph"]],
+                      ["table", ["table"]],
+                      ["insert", ["link", "picture"]],
+                      ["view", ["fullscreen", "codeview"]],
+                    ]
                   },
                 ''' : ''}
             ${widget.htmlEditorOptions.customOptions}
