@@ -131,18 +131,5 @@ void main() {
         () {
       expect("example.com".safeNormalizeLinkInput(), "https://example.com");
     });
-
-    test('safeNormalizeLinkInput should return original value on error', () {
-      const input = "abc";
-
-      String result;
-      try {
-        throw Exception("test");
-      } catch (_) {
-        result = input;
-      }
-
-      expect(result, input);
-    });
   });
 }
