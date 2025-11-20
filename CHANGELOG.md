@@ -1,3 +1,8 @@
+## [3.3.5] - 2025-11-20
+
+### Changed
+- Auto-fill text and URL fields from selected text in LinkEditDialogOverlay
+
 ## [3.3.4] - 2025-11-20
 
 ### Changed
