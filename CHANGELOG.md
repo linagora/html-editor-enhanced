@@ -1,3 +1,8 @@
+## [3.3.3] - 2025-11-20
+
+### Fixed
+- Fix disable Summernote link popover without affecting image popover
+
 ## [3.3.2] - 2025-11-17
 
 ### Changed
