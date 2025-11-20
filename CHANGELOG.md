@@ -1,3 +1,8 @@
+## [3.3.4] - 2025-11-20
+
+### Changed
+- Add link input normalization to LinkEditDialogOverlay
+
 ## [3.3.3] - 2025-11-20
 
 ### Fixed
