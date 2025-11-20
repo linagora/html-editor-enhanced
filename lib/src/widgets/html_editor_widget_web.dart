@@ -1119,6 +1119,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       } else if (dataType == 'toDart: openInsertLinkDialog') {
         if (widget.htmlEditorOptions.useLinkTooltipOverlay) {
           final rectMap = data['rect'] as Map<String, dynamic>;
+          final selectedText = data['text'] as String?;
+          final safeUrl = selectedText?.trim().isNotEmpty == true
+              ? selectedText!.safeNormalizeLinkInput(useFallback: false)
+              : null;
 
           final rect = web.DOMRect(
             rectMap['x']?.toDouble() ?? 0,
@@ -1130,6 +1134,8 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           _linkEditDialogOverlay?.show(
             context: context,
             rect: rect,
+            initialText: selectedText,
+            initialUrl: safeUrl,
             iframeId: createdViewId,
           );
           _linkTooltipOverlay?.hide();
