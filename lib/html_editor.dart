@@ -13,6 +13,7 @@ export 'package:html_editor_enhanced/utils/html_editor_constants.dart';
 export 'package:html_editor_enhanced/src/model/signature_position.dart';
 export 'package:html_editor_enhanced/utils/link_overlay_options.dart';
 export 'package:html_editor_enhanced/utils/link_overlay_manager.dart';
+export 'package:html_editor_enhanced/utils/extensions/string_link_extension.dart';
 
 export 'package:html_editor_enhanced/src/html_editor_unsupported.dart'
     if (dart.library.html) 'package:html_editor_enhanced/src/html_editor_web.dart'

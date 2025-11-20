@@ -44,6 +44,8 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
 
+  uses-material-design: true
+
   assets:
     - packages/html_editor_enhanced/assets/summernote.html
     - packages/html_editor_enhanced/assets/summernote-no-plugins.html
