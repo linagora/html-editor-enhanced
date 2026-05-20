@@ -562,4 +562,42 @@ class JavascriptUtils {
       }
     }
   ''';
+
+  /// Intercepts the platform-correct link shortcut inside the Summernote editor
+  /// and redirects it to the custom Flutter link-insertion overlay instead of
+  /// Summernote's built-in link dialog.
+  ///
+  /// Uses the same Mac-detection heuristic as Summernote itself so the trigger
+  /// mirrors the active keyMap entry:
+  ///   • macOS  → Cmd+K  (metaKey only)
+  ///   • others → Ctrl+K (ctrlKey only)
+  ///
+  /// Calling [e.preventDefault()] causes Summernote to skip its own
+  /// `handleKeyMap` step, so the native dialog is never opened.
+  ///
+  /// [getCaretRect] is always available when this handler is injected because
+  /// [jsFunctionUpdateOrInsertLink] is injected at the same time (both guarded
+  /// by [HtmlEditorOptions.useLinkTooltipOverlay]).
+  static String jsHandleCtrlKShortcutForInsertLink(String viewId) => '''
+    \$('#summernote-2').on('summernote.keydown', function(_, e) {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') !== -1;
+      const isLinkShortcut = isMac
+        ? e.metaKey && !e.ctrlKey && !e.altKey && e.keyCode === 75
+        : e.ctrlKey && !e.metaKey && !e.altKey && e.keyCode === 75;
+
+      if (isLinkShortcut) {
+        e.preventDefault();
+        try {
+          const rect = getCaretRect();
+          const selectedText = window.getSelection().toString();
+          window.parent.postMessage(JSON.stringify({
+            "view": "$viewId",
+            "type": "toDart: openInsertLinkDialog",
+            "rect": rect,
+            "text": selectedText
+          }), "*");
+        } catch (_) {}
+      }
+    });
+  ''';
 }
