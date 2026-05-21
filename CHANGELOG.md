@@ -1,3 +1,8 @@
+## [3.3.6] - 2026-05-21
+
+### Fixed
+- fix(editor): intercept Ctrl+K shortcut to open custom link overlay (#70)
+
 ## [3.3.5] - 2025-11-20
 
 ### Changed
