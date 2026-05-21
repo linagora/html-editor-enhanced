@@ -580,10 +580,10 @@ class JavascriptUtils {
   /// by [HtmlEditorOptions.useLinkTooltipOverlay]).
   static String jsHandleCtrlKShortcutForInsertLink(String viewId) => '''
     \$('#summernote-2').on('summernote.keydown', function(_, e) {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') !== -1;
+      const isMac = /mac/i.test(navigator.userAgentData?.platform ?? navigator.platform);
       const isLinkShortcut = isMac
-        ? e.metaKey && !e.ctrlKey && !e.altKey && e.keyCode === 75
-        : e.ctrlKey && !e.metaKey && !e.altKey && e.keyCode === 75;
+        ? e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && e.code === 'KeyK'
+        : e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && e.code === 'KeyK';
 
       if (isLinkShortcut) {
         e.preventDefault();
