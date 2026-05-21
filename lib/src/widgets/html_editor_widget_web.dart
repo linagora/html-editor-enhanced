@@ -318,6 +318,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
           ${widget.htmlEditorOptions.normalizeHtmlTextWhenDropping ? JavascriptUtils.jsHandleNormalizeHtmlTextWhenDropping : ''}
           
           ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleClickHyperLink(createdViewId) : ''}
+          ${widget.htmlEditorOptions.useLinkTooltipOverlay ? JavascriptUtils.jsHandleCtrlKShortcutForInsertLink(createdViewId) : ''}
         });
        
         window.parent.addEventListener('message', handleMessage, false);
