@@ -3,7 +3,8 @@
 name: CI
 
 env:
-  FLUTTER_VERSION: 3.32.8
+  # file_picker 13 needs Dart >=3.10, shipped from Flutter 3.38.
+  FLUTTER_VERSION: 3.38.9
 
 # Controls when the workflow will run
 on:
