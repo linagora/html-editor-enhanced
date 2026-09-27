@@ -126,6 +126,42 @@ void main() {
     });
   });
 
+  group('StringLinkExtension → normalizeLinkInput (dangerous schemes)', () {
+    test('javascript: → neutralized to empty', () {
+      expect("javascript:alert('xss')".normalizeLinkInput(), "");
+    });
+
+    test('JavaScript: (mixed case) → neutralized', () {
+      expect("JavaScript:alert(1)".normalizeLinkInput(), "");
+    });
+
+    test('vbscript: → neutralized', () {
+      expect("vbscript:msgbox(1)".normalizeLinkInput(), "");
+    });
+
+    test('data: → neutralized', () {
+      expect(
+        "data:text/html,<script>alert(1)</script>".normalizeLinkInput(),
+        "",
+      );
+    });
+
+    test('livescript: → neutralized', () {
+      expect("livescript:alert(1)".normalizeLinkInput(), "");
+    });
+
+    test('scheme split by a space is not a scheme → https fallback', () {
+      expect(
+        "java script:alert(1)".normalizeLinkInput(),
+        "https://java script:alert(1)",
+      );
+    });
+
+    test('safeNormalizeLinkInput neutralizes javascript:', () {
+      expect("javascript:alert(1)".safeNormalizeLinkInput(), "");
+    });
+  });
+
   group('StringLinkExtension → safeNormalizeLinkInput', () {
     test('safeNormalizeLinkInput should return normalized value on success',
         () {
