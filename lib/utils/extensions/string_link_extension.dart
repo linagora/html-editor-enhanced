@@ -1,3 +1,11 @@
+const Set<String> _dangerousLinkSchemes = {
+  'javascript',
+  'vbscript',
+  'livescript',
+  'mocha',
+  'data',
+};
+
 extension StringLinkExtension on String {
   String normalizeLinkInput({bool useFallback = true}) {
     final value = trim();
@@ -20,11 +28,20 @@ extension StringLinkExtension on String {
       return "mailto:$value";
     }
 
-    final hasScheme = RegExp(
-      r'^[a-zA-Z][a-zA-Z0-9+.-]*:',
-    ).hasMatch(value);
+    final scheme = RegExp(
+      r'^([a-zA-Z][a-zA-Z0-9+.-]*):',
+    ).firstMatch(value)?.group(1);
 
-    if (hasScheme) {
+    if (scheme != null) {
+      // Reject schemes that can execute code or smuggle active content when
+      // the resulting <a href> is rendered. Returning an empty string
+      // neutralizes the link instead of originating a hostile href. Inputs
+      // whose scheme is broken up by whitespace or control characters do not
+      // match this pattern and fall through to the https:// fallback below,
+      // which is inert.
+      if (_dangerousLinkSchemes.contains(scheme.toLowerCase())) {
+        return '';
+      }
       return value;
     }
 
