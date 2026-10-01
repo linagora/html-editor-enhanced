@@ -150,6 +150,10 @@ void main() {
       expect("livescript:alert(1)".normalizeLinkInput(), "");
     });
 
+    test('mocha: → neutralized', () {
+      expect("mocha:alert(1)".normalizeLinkInput(), "");
+    });
+
     test('scheme split by a space is not a scheme → https fallback', () {
       expect(
         "java script:alert(1)".normalizeLinkInput(),
