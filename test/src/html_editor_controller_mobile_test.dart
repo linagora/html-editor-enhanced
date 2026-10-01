@@ -1,6 +1,8 @@
 @TestOn('vm')
 library;
 
+import 'dart:convert';
+
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:html_editor_enhanced/src/html_editor_controller_mobile.dart';
@@ -49,8 +51,22 @@ void main() {
       expect(webViewController.sources, hasLength(1));
       expect(
         webViewController.sources.single,
-        contains("url: 'https://example.com'"),
+        contains('url: "https://example.com"'),
       );
+    });
+
+    test('passes text and URL as JS string literals, not as JS source',
+        () async {
+      // JS would decode `\x6a` to `j` inside a quoted literal and a quote
+      // would end it, so both must reach the webview escaped.
+      const text = 'a"b';
+      const url = r"\x6aavascript:alert(1)//'";
+      controller.insertLink(text, url, false);
+      await pumpEventQueue();
+
+      final source = webViewController.sources.single;
+      expect(source, contains('text: ${jsonEncode(text)},'));
+      expect(source, contains('url: ${jsonEncode(url)},'));
     });
   });
 }

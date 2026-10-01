@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -158,8 +160,8 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     if (url.hasDangerousLinkScheme) return;
     _evaluateJavascript(source: """
     \$('#summernote-2').summernote('createLink', {
-        text: "$text",
-        url: '$url',
+        text: ${jsonEncode(text)},
+        url: ${jsonEncode(url)},
         isNewWindow: $isNewWindow
       });
     """);
