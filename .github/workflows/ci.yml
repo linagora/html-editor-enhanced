@@ -41,3 +41,6 @@ jobs:
 
       - name: Unit-tests
         run: flutter test
+
+      - name: Web unit-tests
+        run: flutter test --platform chrome
