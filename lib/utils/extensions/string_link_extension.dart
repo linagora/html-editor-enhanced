@@ -1,9 +1,20 @@
+/// Link schemes that are never written into an `<a href>`.
+///
+/// This is a denylist of known risky schemes: script execution
+/// (`javascript`, `vbscript`, `livescript`, `mocha`), inline or local content
+/// (`data`, `blob`, `file`, `filesystem`) and Android app launching
+/// (`intent`). It is not an HTML sanitizer and does not make arbitrary email
+/// HTML safe to render.
 const Set<String> _dangerousLinkSchemes = {
   'javascript',
   'vbscript',
   'livescript',
   'mocha',
   'data',
+  'blob',
+  'file',
+  'filesystem',
+  'intent',
 };
 
 extension StringLinkExtension on String {

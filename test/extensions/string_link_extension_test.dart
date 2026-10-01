@@ -154,6 +154,32 @@ void main() {
       expect("mocha:alert(1)".normalizeLinkInput(), "");
     });
 
+    test('blob: → neutralized', () {
+      expect(
+        "blob:https://example.com/0b1c2d3e".normalizeLinkInput(),
+        "",
+      );
+    });
+
+    test('file: → neutralized', () {
+      expect("file:///etc/passwd".normalizeLinkInput(), "");
+    });
+
+    test('filesystem: → neutralized', () {
+      expect(
+        "filesystem:https://example.com/temporary/a.html".normalizeLinkInput(),
+        "",
+      );
+    });
+
+    test('intent: → neutralized', () {
+      expect(
+        "intent://scan/#Intent;scheme=zxing;package=com.example;end"
+            .normalizeLinkInput(),
+        "",
+      );
+    });
+
     test('scheme split by a space is not a scheme → https fallback', () {
       expect(
         "java script:alert(1)".normalizeLinkInput(),
