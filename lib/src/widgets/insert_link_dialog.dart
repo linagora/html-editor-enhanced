@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/utils/extensions/string_link_extension.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 typedef OnInsertLink = void Function(
@@ -79,6 +80,9 @@ class InsertLinkDialog {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a URL!';
+                          }
+                          if (value.hasDangerousLinkScheme) {
+                            return 'This type of link is not allowed!';
                           }
                           return null;
                         },

@@ -1915,6 +1915,9 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                           if (value == null || value.isEmpty) {
                                             return 'Please enter a URL!';
                                           }
+                                          if (value.hasDangerousLinkScheme) {
+                                            return 'This type of link is not allowed!';
+                                          }
                                           return null;
                                         },
                                       ),
