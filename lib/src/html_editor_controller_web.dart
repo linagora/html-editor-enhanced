@@ -204,9 +204,11 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
     });
   }
 
-  /// Insert a link at the position of the cursor in the editor
+  /// Insert a link at the position of the cursor in the editor. Does nothing
+  /// when [url] has a dangerous scheme (see `hasDangerousLinkScheme`).
   @override
   void insertLink(String text, String url, bool isNewWindow) {
+    if (url.hasDangerousLinkScheme) return;
     _evaluateJavascriptWeb(data: {
       'type': 'toIframe: insertLink',
       'text': text,

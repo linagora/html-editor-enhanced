@@ -18,6 +18,22 @@ const Set<String> _dangerousLinkSchemes = {
 };
 
 extension StringLinkExtension on String {
+  /// Whether a browser would resolve this string, used as an `href`, to one
+  /// of the dangerous link schemes.
+  ///
+  /// Follows the WHATWG URL parser, which strips leading C0 controls and
+  /// spaces and removes ASCII tab and newline characters anywhere in the
+  /// input, so `java\tscript:` is caught as well.
+  bool get hasDangerousLinkScheme {
+    final value = replaceAll(RegExp(r'[\t\n\r]+'), '')
+        .replaceFirst(RegExp(r'^[\x00-\x20]+'), '');
+    final scheme = RegExp(
+      r'^([a-zA-Z][a-zA-Z0-9+.-]*):',
+    ).firstMatch(value)?.group(1);
+    return scheme != null &&
+        _dangerousLinkSchemes.contains(scheme.toLowerCase());
+  }
+
   String normalizeLinkInput({bool useFallback = true}) {
     final value = trim();
     if (value.isEmpty) return value;

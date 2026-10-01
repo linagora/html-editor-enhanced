@@ -198,4 +198,37 @@ void main() {
       expect("example.com".safeNormalizeLinkInput(), "https://example.com");
     });
   });
+
+  group('StringLinkExtension → hasDangerousLinkScheme', () {
+    test('javascript: → dangerous', () {
+      expect("javascript:alert(1)".hasDangerousLinkScheme, isTrue);
+    });
+
+    test('JavaScript: (mixed case) → dangerous', () {
+      expect("JavaScript:alert(1)".hasDangerousLinkScheme, isTrue);
+    });
+
+    test('scheme split by tab or newline → dangerous', () {
+      expect("java\tscript:alert(1)".hasDangerousLinkScheme, isTrue);
+      expect("java\nscript:alert(1)".hasDangerousLinkScheme, isTrue);
+      expect("java\r\nscript:alert(1)".hasDangerousLinkScheme, isTrue);
+    });
+
+    test('leading control characters and spaces → dangerous', () {
+      expect("\u0001 javascript:alert(1)".hasDangerousLinkScheme, isTrue);
+    });
+
+    test('scheme split by a space is not a scheme → not dangerous', () {
+      expect("java script:alert(1)".hasDangerousLinkScheme, isFalse);
+    });
+
+    test('safe and relative links → not dangerous', () {
+      expect("https://example.com".hasDangerousLinkScheme, isFalse);
+      expect("mailto:user@example.com".hasDangerousLinkScheme, isFalse);
+      expect("example.com".hasDangerousLinkScheme, isFalse);
+      expect("/path/page.html".hasDangerousLinkScheme, isFalse);
+      expect("#top".hasDangerousLinkScheme, isFalse);
+      expect("".hasDangerousLinkScheme, isFalse);
+    });
+  });
 }
