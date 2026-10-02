@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:html_editor_enhanced/utils/extensions/string_link_extension.dart';
 
@@ -230,5 +232,35 @@ void main() {
       expect("#top".hasDangerousLinkScheme, isFalse);
       expect("".hasDangerousLinkScheme, isFalse);
     });
+  });
+
+  group('StringLinkExtension → normalizeLinkInput agrees with hasDangerousLinkScheme',
+      () {
+    // Inputs a browser resolves to a dangerous scheme once it strips tab and
+    // newline characters and leading C0 controls from an href.
+    const browserDangerousInputs = [
+      "java\tscript:alert(1)",
+      "java\nscript:alert(1)",
+      "java\r\nscript:alert(1)",
+      "\u0001javascript:alert(1)",
+      "\u0001 javascript:alert(1)",
+      "da\tta:text/html,<script>alert(1)</script>",
+      "java\tscript:alert(document.domain)",
+    ];
+
+    for (final input in browserDangerousInputs) {
+      test('${jsonEncode(input)} → neutralized to empty', () {
+        expect(input.hasDangerousLinkScheme, isTrue);
+        expect(input.normalizeLinkInput(), "");
+      });
+
+      test('${jsonEncode(input)} → neutralized without fallback', () {
+        expect(input.normalizeLinkInput(useFallback: false), "");
+      });
+
+      test('${jsonEncode(input)} → safeNormalizeLinkInput neutralizes', () {
+        expect(input.safeNormalizeLinkInput(), "");
+      });
+    }
   });
 }

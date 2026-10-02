@@ -65,5 +65,30 @@ void main() {
       },
       timeout: const Timeout(Duration(seconds: 60)),
     );
+
+    testWidgets(
+      'rejects a URL whose scheme a browser reads as javascript: after '
+      'stripping a tab',
+      (tester) async {
+        final postedUrls = <String?>[];
+        final subscription = web.window.onMessage
+            .map(WebUtils.convertMessageEventToDataMap)
+            .where((data) => data['type'] == 'toIframe: updateLink')
+            .listen((data) => postedUrls.add(data['url'] as String?));
+        addTearDown(subscription.cancel);
+
+        await openOverlay(tester);
+        await applyUrl(tester, 'java\tscript:alert(1)');
+
+        expect(find.text(rejectedUrlErrorText), findsOneWidget);
+        expect(find.text('Apply'), findsOneWidget);
+
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        expect(postedUrls, isEmpty);
+      },
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
   });
 }
