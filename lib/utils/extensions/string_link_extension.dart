@@ -5,7 +5,7 @@
 /// (`data`, `blob`, `file`, `filesystem`) and Android app launching
 /// (`intent`). It is not an HTML sanitizer and does not make arbitrary email
 /// HTML safe to render.
-const Set<String> _dangerousLinkSchemes = {
+const Set<String> dangerousLinkSchemes = {
   'javascript',
   'vbscript',
   'livescript',
@@ -31,7 +31,7 @@ extension StringLinkExtension on String {
       r'^([a-zA-Z][a-zA-Z0-9+.-]*):',
     ).firstMatch(value)?.group(1);
     return scheme != null &&
-        _dangerousLinkSchemes.contains(scheme.toLowerCase());
+        dangerousLinkSchemes.contains(scheme.toLowerCase());
   }
 
   String normalizeLinkInput({bool useFallback = true}) {

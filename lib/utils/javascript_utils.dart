@@ -1,5 +1,34 @@
+import 'dart:convert';
+
+import 'package:html_editor_enhanced/utils/extensions/string_link_extension.dart';
+
 class JavascriptUtils {
   const JavascriptUtils._();
+
+  /// Makes Summernote's `createLink` ignore a URL with a dangerous scheme,
+  /// whichever path calls it: Summernote's own link dialog (Ctrl/Cmd+K, the
+  /// link popover), `insertLink` or `updateCurrentLink`.
+  ///
+  /// Mirrors `hasDangerousLinkScheme`. Wraps the editor module method instead
+  /// of setting Summernote's `onCreateLink` option, which would drop the link
+  /// dialog's "Use default protocol" handling and a host's own `onCreateLink`.
+  static final String jsRejectDangerousLinkSchemes = '''
+    (function() {
+      const editor = \$('#summernote-2').data('summernote').modules.editor;
+      const createLink = editor.createLink;
+      const dangerousSchemes = ${jsonEncode(dangerousLinkSchemes.toList())};
+      editor.createLink = function(linkInfo) {
+        const url = String((linkInfo && linkInfo.url) || '')
+          .replace(/[\\t\\n\\r]+/g, '')
+          .replace(/^[\\x00-\\x20]+/, '');
+        const scheme = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(url);
+        if (scheme && dangerousSchemes.includes(scheme[1].toLowerCase())) {
+          return;
+        }
+        return createLink.apply(this, arguments);
+      };
+    })();
+  ''';
 
   static String jsHandleCreateSignature(String viewId) => '''
    function insertSignature(signatureHtml, allowCollapsed) {
