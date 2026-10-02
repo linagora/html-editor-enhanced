@@ -55,6 +55,7 @@ class LinkEditDialogOverlayOptions {
   final String hintText;
   final String hintUrl;
   final String applyButtonLabel;
+  final String rejectedUrlErrorText;
   final TextStyle? hintTextStyle;
   final TextStyle? inputTextStyle;
   final CustomTextStyleBuilder? applyButtonTextStyle;
@@ -76,6 +77,7 @@ class LinkEditDialogOverlayOptions {
     this.hintText = 'Text',
     this.hintUrl = 'Type or paste a link',
     this.applyButtonLabel = 'Apply',
+    this.rejectedUrlErrorText = 'This type of link is not allowed!',
     this.hintTextStyle,
     this.inputTextStyle,
     this.applyButtonTextStyle,

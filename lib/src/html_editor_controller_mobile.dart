@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -151,13 +153,15 @@ class HtmlEditorController extends unsupported.HtmlEditorController {
             "\$('#summernote-2').summernote('insertImage', '$url', '$filename');");
   }
 
-  /// Insert a link at the position of the cursor in the editor
+  /// Insert a link at the position of the cursor in the editor. Does nothing
+  /// when [url] has a dangerous scheme (see `hasDangerousLinkScheme`).
   @override
   void insertLink(String text, String url, bool isNewWindow) {
+    if (url.hasDangerousLinkScheme) return;
     _evaluateJavascript(source: """
     \$('#summernote-2').summernote('createLink', {
-        text: "$text",
-        url: '$url',
+        text: ${jsonEncode(text)},
+        url: ${jsonEncode(url)},
         isNewWindow: $isNewWindow
       });
     """);

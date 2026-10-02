@@ -13,6 +13,7 @@ class LinkEditDialogOverlay with LinkOverlay {
   FocusNode? _applyButtonFocusNode;
 
   ValueNotifier<bool>? _isApplyEnabled;
+  ValueNotifier<String?>? _urlErrorText;
 
   final LinkEditDialogOverlayOptions dialogOverlayOptions;
 
@@ -89,8 +90,11 @@ class LinkEditDialogOverlay with LinkOverlay {
       _urlController!.text.trim().isNotEmpty,
     );
 
+    _urlErrorText = ValueNotifier<String?>(null);
+
     _urlController!.addListener(() {
       _isApplyEnabled!.value = _urlController!.text.trim().isNotEmpty;
+      _urlErrorText!.value = null;
     });
 
     _entry = OverlayEntry(
@@ -169,19 +173,27 @@ class LinkEditDialogOverlay with LinkOverlay {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                _buildInputRow(
-                                  icon: dialogOverlayOptions.urlPrefixIcon ??
-                                      const Icon(
-                                        Icons.link,
-                                        size: 24,
-                                        color: Color(0xFF55687D),
+                                ValueListenableBuilder<String?>(
+                                  valueListenable: _urlErrorText!,
+                                  builder: (context, errorText, _) {
+                                    return _buildInputRow(
+                                      icon:
+                                          dialogOverlayOptions.urlPrefixIcon ??
+                                              const Icon(
+                                                Icons.link,
+                                                size: 24,
+                                                color: Color(0xFF55687D),
+                                              ),
+                                      controller: _urlController!,
+                                      focusNode: _urlFocusNode,
+                                      hintText: dialogOverlayOptions.hintUrl,
+                                      errorText: errorText,
+                                      onSubmitted: () =>
+                                          _performSubmittedAction(
+                                        iframeId: iframeId,
                                       ),
-                                  controller: _urlController!,
-                                  focusNode: _urlFocusNode,
-                                  hintText: dialogOverlayOptions.hintUrl,
-                                  onSubmitted: () => _performSubmittedAction(
-                                    iframeId: iframeId,
-                                  ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -251,6 +263,7 @@ class LinkEditDialogOverlay with LinkOverlay {
     required TextEditingController controller,
     FocusNode? focusNode,
     String? hintText,
+    String? errorText,
     VoidCallback? onSubmitted,
   }) {
     return Row(
@@ -280,6 +293,7 @@ class LinkEditDialogOverlay with LinkOverlay {
                 ),
             decoration: InputDecoration(
               hintText: hintText,
+              errorText: errorText,
               isDense: true,
               hintStyle: dialogOverlayOptions.hintTextStyle ??
                   const TextStyle(
@@ -336,6 +350,9 @@ class LinkEditDialogOverlay with LinkOverlay {
     _isApplyEnabled?.dispose();
     _isApplyEnabled = null;
 
+    _urlErrorText?.dispose();
+    _urlErrorText = null;
+
     _textFocusNode?.dispose();
     _textFocusNode = null;
 
@@ -352,6 +369,10 @@ class LinkEditDialogOverlay with LinkOverlay {
 
     if (url.isNotEmpty) {
       final safeUrl = url.safeNormalizeLinkInput();
+      if (safeUrl.isEmpty) {
+        _urlErrorText?.value = dialogOverlayOptions.rejectedUrlErrorText;
+        return;
+      }
 
       postMessageToIframe(
         'updateLink',
