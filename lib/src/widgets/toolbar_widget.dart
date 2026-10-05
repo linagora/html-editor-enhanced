@@ -2013,7 +2013,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 final filename = TextEditingController();
                 final url = TextEditingController();
                 final urlFocus = FocusNode();
-                PlatformFile? result;
+                FilePickerResult? result;
                 String? validateFailed;
 
                 if (context.mounted) {
@@ -2047,15 +2047,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                                     left: 5, right: 5),
                                                 elevation: 0.0),
                                             onPressed: () async {
-                                              result = await FilePicker.pickFile(
+                                              result = await FilePicker.platform
+                                                  .pickFiles(
                                                 type: FileType.image,
+                                                withData: true,
                                                 allowedExtensions: widget
                                                     .htmlToolbarOptions
                                                     .imageExtensions,
                                               );
-                                              if (result?.name != null) {
+                                              if (result?.files.single.name !=
+                                                  null) {
                                                 setState(() {
-                                                  filename.text = result!.name;
+                                                  filename.text =
+                                                      result!.files.single.name;
                                                 });
                                               }
                                             },
@@ -2120,18 +2124,18 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                             'Please input either an image or an image URL, not both!';
                                       });
                                     } else if (filename.text.isNotEmpty &&
-                                        result != null) {
-                                      final bytes = await result!.readAsBytes();
-                                      var base64Data = base64.encode(bytes);
+                                        result?.files.single.bytes != null) {
+                                      var base64Data = base64
+                                          .encode(result!.files.single.bytes!);
                                       var proceed = await widget
                                               .htmlToolbarOptions
                                               .mediaUploadInterceptor
-                                              ?.call(result!,
+                                              ?.call(result!.files.single,
                                                   InsertFileType.image) ??
                                           true;
                                       if (proceed) {
                                         widget.controller.insertHtml(
-                                            "<img src='data:image/${result!.extension};base64,$base64Data' data-filename='${result!.name}'/>");
+                                            "<img src='data:image/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}'/>");
                                       }
                                       if (context.mounted) {
                                         Navigator.of(context).pop();
@@ -2170,7 +2174,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 final filename = TextEditingController();
                 final url = TextEditingController();
                 final urlFocus = FocusNode();
-                PlatformFile? result;
+                FilePickerResult? result;
                 String? validateFailed;
 
                 if (context.mounted) {
@@ -2204,15 +2208,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                                     left: 5, right: 5),
                                                 elevation: 0.0),
                                             onPressed: () async {
-                                              result = await FilePicker.pickFile(
+                                              result = await FilePicker.platform
+                                                  .pickFiles(
                                                 type: FileType.audio,
+                                                withData: true,
                                                 allowedExtensions: widget
                                                     .htmlToolbarOptions
                                                     .audioExtensions,
                                               );
-                                              if (result?.name != null) {
+                                              if (result?.files.single.name !=
+                                                  null) {
                                                 setState(() {
-                                                  filename.text = result!.name;
+                                                  filename.text =
+                                                      result!.files.single.name;
                                                 });
                                               }
                                             },
@@ -2277,18 +2285,18 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                             'Please input either an audio file or an audio URL, not both!';
                                       });
                                     } else if (filename.text.isNotEmpty &&
-                                        result != null) {
-                                      final bytes = await result!.readAsBytes();
-                                      var base64Data = base64.encode(bytes);
+                                        result?.files.single.bytes != null) {
+                                      var base64Data = base64
+                                          .encode(result!.files.single.bytes!);
                                       var proceed = await widget
                                               .htmlToolbarOptions
                                               .mediaUploadInterceptor
-                                              ?.call(result!,
+                                              ?.call(result!.files.single,
                                                   InsertFileType.audio) ??
                                           true;
                                       if (proceed) {
                                         widget.controller.insertHtml(
-                                            "<audio controls src='data:audio/${result!.extension};base64,$base64Data' data-filename='${result!.name}'></audio>");
+                                            "<audio controls src='data:audio/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}'></audio>");
                                       }
                                       if (context.mounted) {
                                         Navigator.of(context).pop();
@@ -2327,7 +2335,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 final filename = TextEditingController();
                 final url = TextEditingController();
                 final urlFocus = FocusNode();
-                PlatformFile? result;
+                FilePickerResult? result;
                 String? validateFailed;
 
                 if (context.mounted) {
@@ -2361,15 +2369,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                                     left: 5, right: 5),
                                                 elevation: 0.0),
                                             onPressed: () async {
-                                              result = await FilePicker.pickFile(
+                                              result = await FilePicker.platform
+                                                  .pickFiles(
                                                 type: FileType.video,
+                                                withData: true,
                                                 allowedExtensions: widget
                                                     .htmlToolbarOptions
                                                     .videoExtensions,
                                               );
-                                              if (result?.name != null) {
+                                              if (result?.files.single.name !=
+                                                  null) {
                                                 setState(() {
-                                                  filename.text = result!.name;
+                                                  filename.text =
+                                                      result!.files.single.name;
                                                 });
                                               }
                                             },
@@ -2434,18 +2446,18 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                             'Please input either a video or a video URL, not both!';
                                       });
                                     } else if (filename.text.isNotEmpty &&
-                                        result != null) {
-                                      final bytes = await result!.readAsBytes();
-                                      var base64Data = base64.encode(bytes);
+                                        result?.files.single.bytes != null) {
+                                      var base64Data = base64
+                                          .encode(result!.files.single.bytes!);
                                       var proceed = await widget
                                               .htmlToolbarOptions
                                               .mediaUploadInterceptor
-                                              ?.call(result!,
+                                              ?.call(result!.files.single,
                                                   InsertFileType.video) ??
                                           true;
                                       if (proceed) {
                                         widget.controller.insertHtml(
-                                            "<video controls src='data:video/${result!.extension};base64,$base64Data' data-filename='${result!.name}'></video>");
+                                            "<video controls src='data:video/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}'></video>");
                                       }
                                       if (context.mounted) {
                                         Navigator.of(context).pop();
@@ -2484,7 +2496,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 final filename = TextEditingController();
                 final url = TextEditingController();
                 final urlFocus = FocusNode();
-                PlatformFile? result;
+                FilePickerResult? result;
                 String? validateFailed;
 
                 if (context.mounted) {
@@ -2518,15 +2530,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                                     left: 5, right: 5),
                                                 elevation: 0.0),
                                             onPressed: () async {
-                                              result = await FilePicker.pickFile(
+                                              result = await FilePicker.platform
+                                                  .pickFiles(
                                                 type: FileType.any,
+                                                withData: true,
                                                 allowedExtensions: widget
                                                     .htmlToolbarOptions
                                                     .otherFileExtensions,
                                               );
-                                              if (result?.name != null) {
+                                              if (result?.files.single.name !=
+                                                  null) {
                                                 setState(() {
-                                                  filename.text = result!.name;
+                                                  filename.text =
+                                                      result!.files.single.name;
                                                 });
                                               }
                                             },
@@ -2591,10 +2607,10 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                             'Please input either a file or a file URL, not both!';
                                       });
                                     } else if (filename.text.isNotEmpty &&
-                                        result != null) {
+                                        result?.files.single.bytes != null) {
                                       widget
                                           .htmlToolbarOptions.onOtherFileUpload
-                                          ?.call(result!);
+                                          ?.call(result!.files.single);
                                       Navigator.of(context).pop();
                                     } else {
                                       widget.htmlToolbarOptions
