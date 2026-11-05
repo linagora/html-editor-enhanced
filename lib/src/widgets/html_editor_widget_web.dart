@@ -9,6 +9,7 @@ import 'package:html_editor_enhanced/src/widgets/insert_link_dialog.dart';
 import 'package:html_editor_enhanced/src/widgets/link_edit_dialog_overlay.dart';
 import 'package:html_editor_enhanced/src/widgets/link_tooltip_overlay.dart';
 import 'package:html_editor_enhanced/utils/javascript_utils.dart';
+import 'package:html_editor_enhanced/utils/nonce_utils.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 import 'package:html_editor_enhanced/utils/web_utils.dart';
 import 'package:web/web.dart' as web;
@@ -99,6 +100,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
   }
 
   void initSummernote() async {
+    final scriptNonce = _hostScriptNonce();
     var headString = '';
     var summernoteCallbacks = '''callbacks: {
         onKeydown: function(e) {
@@ -269,7 +271,7 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       }
     }
     var summernoteScripts = """
-      <script type="text/javascript">
+      <script${NonceUtils.nonceAttribute(scriptNonce)} type="text/javascript">
         let editorHasBeenFocused = false;
       
         \$(document).ready(function () {
@@ -668,6 +670,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
 
     var htmlString = await HtmlEditorUtils.loadAssetAsString(filePath);
 
+    // Stamps before consumer text is substituted: it may hold literal "<script" strings.
+    htmlString = NonceUtils.addNonceToScriptTags(htmlString, scriptNonce);
+    headString = NonceUtils.addNonceToScriptTags(headString, scriptNonce);
+
     htmlString = htmlString
         .replaceFirst('<!--customInternalCSS-->', widget.htmlEditorOptions.customInternalCSS)
         .replaceFirst('<!--darkCSS-->', darkCSS)
@@ -684,11 +690,12 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       final jqueryContent = contentAssets[0];
       final summernoteCSSContent = contentAssets[1];
       final summernoteJSContent = contentAssets[2];
+      final nonceAttribute = NonceUtils.nonceAttribute(scriptNonce);
 
       htmlString = htmlString
-          .replaceFirst('<script src="jquery.min.js"></script>', '<script>$jqueryContent</script>')
+          .replaceFirst('<script$nonceAttribute src="jquery.min.js"></script>', '<script$nonceAttribute>$jqueryContent</script>')
           .replaceFirst('<link href="summernote-lite.min.css" rel="stylesheet">', '<style>$summernoteCSSContent</style>')
-          .replaceFirst('<script src="summernote-lite.min.js"></script>', '<script>$summernoteJSContent</script>');
+          .replaceFirst('<script$nonceAttribute src="summernote-lite.min.js"></script>', '<script$nonceAttribute>$summernoteJSContent</script>');
 
       htmlString = htmlString
           .replaceAll("url(font/summernote.eot)", "url('${HtmlEditorConstants.summernoteFontEOTAssetPath}')")
@@ -729,6 +736,10 @@ class _HtmlEditorWidgetWebState extends State<HtmlEditorWidget> {
       summernoteInit = Future.value(true);
     });
   }
+
+  /// Reads the IDL property: browsers blank the attribute value after parsing.
+  String? _hostScriptNonce() =>
+      (web.document.querySelector('script[nonce]') as web.HTMLElement?)?.nonce;
 
   @override
   Widget build(BuildContext context) {
