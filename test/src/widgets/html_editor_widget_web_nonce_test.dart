@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/src/widgets/html_editor_widget_web.dart';
+import 'package:html_editor_enhanced/utils/nonce_utils.dart';
 import 'package:web/web.dart' as web;
 
 const _nonce = 'widgetTestNonce1';
@@ -38,6 +39,34 @@ const _syntheticTemplate = '''
 
 late int _inlinedInnerScriptCount;
 
+String? _templateOverride;
+String? _filePathOverride;
+List<Plugins> _pluginsOverride = const [];
+
+const _customFilePath = 'custom-editor.html';
+
+const _customTemplate = '''
+<html lang="en">
+<head>
+  <script>var t = "<script>";</script>
+  <script src="jquery.min.js"></script>
+  <link href="summernote-lite.min.css" rel="stylesheet">
+  <script src="summernote-lite.min.js"></script>
+  <!--customInternalCSS-->
+  <!--darkCSS-->
+</head>
+<body>
+<div id="summernote-2"></div>
+<!--headString-->
+<!--summernoteScripts-->
+<!--customBodyCssStyle-->
+</body>
+</html>
+''';
+
+const _pluginSrc =
+    'assets/packages/html_editor_enhanced/assets/plugins/summernote-at-mention/summernote-at-mention.js';
+
 Future<String> _fetchAsset(String packagePath) async {
   final response = await web.window.fetch('/$packagePath'.toJS).toDart;
   return (await response.text().toDart).toDart;
@@ -48,7 +77,8 @@ Future<String> _fetchAsset(String packagePath) async {
 Future<ByteData?> _serveAsset(ByteData? message) async {
   final key = utf8.decode(message!.buffer.asUint8List());
   if (key.endsWith('.html')) {
-    return ByteData.sublistView(utf8.encode(_syntheticTemplate));
+    return ByteData.sublistView(
+        utf8.encode(_templateOverride ?? _syntheticTemplate));
   }
   final response = await web.window.fetch('/$key'.toJS).toDart;
   if (response.status != 200) return null;
@@ -92,6 +122,15 @@ web.HTMLIFrameElement _lastCapturedIframe() =>
 
 String _editorSrcdoc() => (_lastCapturedIframe().srcdoc as JSString).toDart;
 
+web.HTMLScriptElement _appendHostScript({String? attribute, String? property}) {
+  final element = web.document.createElement('script') as web.HTMLScriptElement;
+  if (attribute != null) element.setAttribute('nonce', attribute);
+  if (property != null) element.nonce = property;
+  web.document.head!.append(element);
+  addTearDown(() => element.remove());
+  return element;
+}
+
 web.HTMLScriptElement _addHostScriptWithNonce() {
   // Reproduces nonce hiding: the attribute reads blank, the property holds it.
   final element = web.document.createElement('script') as web.HTMLScriptElement
@@ -113,9 +152,10 @@ Future<void> _pumpEditor(
         return HtmlEditorWidget(
           controller: HtmlEditorController(),
           callbacks: null,
-          plugins: const [],
+          plugins: _pluginsOverride,
           htmlEditorOptions: HtmlEditorOptions(
             cacheHTMLAssetOffline: offline,
+            filePath: _filePathOverride,
             webInitialScripts: UnmodifiableListView(webInitialScripts),
           ),
           htmlToolbarOptions: const HtmlToolbarOptions(),
@@ -147,8 +187,7 @@ Future<void> _verifyOfflineDocument(WidgetTester tester) async {
   expect('<script nonce="$_nonce"'.allMatches(doc).length, 3);
   expect(doc, contains('<script nonce="$_nonce" type="text/javascript">'));
   expect('<script'.allMatches(doc).length, 3 + _inlinedInnerScriptCount);
-  expect(doc, contains('/<script|<style|<link/i'));
-  expect(doc, contains('S("<script>")'));
+  _expectInlinedVendorBodies(doc);
 }
 
 Future<void> _verifyOnlineDocument(WidgetTester tester) async {
@@ -198,25 +237,118 @@ Future<void> _verifyConsumerWebScriptBody(WidgetTester tester) async {
   expect('<script'.allMatches(doc).length, 4 + _inlinedInnerScriptCount);
 }
 
-void main() {
-  setUpAll(() async {
-    final jquery = await _fetchAsset(HtmlEditorConstants.jqueryAssetPath);
-    final summernoteJs =
-        await _fetchAsset(HtmlEditorConstants.summernoteJSAssetPath);
-    _inlinedInnerScriptCount = '<script'.allMatches(jquery).length +
-        '<script'.allMatches(summernoteJs).length;
+void _expectInlinedVendorBodies(String doc) {
+  expect(doc, contains('/<script|<style|<link/i'));
+  expect(doc, contains('S("<script>")'));
+}
 
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMessageHandler('flutter/assets', _serveAsset);
-    _installIframeCaptureHook();
-  });
+void _expectPackageWrittenTags(String doc) {
+  expect(doc, contains('<script>var t = "<script>";</script>'));
+  expect(doc, contains('<script nonce="$_nonce" type="text/javascript">'));
+  expect(doc, contains('<script nonce="$_nonce" src="$_pluginSrc"></script>'));
+}
 
-  tearDownAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMessageHandler('flutter/assets', null);
-    _uninstallIframeCaptureHook();
-  });
+Future<String> _srcdocForCustomTemplate(
+  WidgetTester tester, {
+  required bool offline,
+}) async {
+  final hostScript = _addHostScriptWithNonce();
+  addTearDown(() => hostScript.remove());
+  _filePathOverride = _customFilePath;
+  _templateOverride = _customTemplate;
+  _pluginsOverride = const [SummernoteAtMention(mentionsWeb: ['ada'])];
+  await _pumpEditor(tester, offline: offline);
+  return _editorSrcdoc();
+}
 
+Future<void> _verifyCustomFilePathTemplate(WidgetTester tester) async {
+  final doc = await _srcdocForCustomTemplate(tester, offline: false);
+
+  _expectPackageWrittenTags(doc);
+  expect(doc,
+      contains('<script src="${HtmlEditorConstants.jqueryAssetPath}"></script>'));
+}
+
+Future<void> _verifyCustomTemplateOfflineInline(WidgetTester tester) async {
+  final doc = await _srcdocForCustomTemplate(tester, offline: true);
+
+  _expectPackageWrittenTags(doc);
+  _expectInlinedVendorBodies(doc);
+  expect(doc.contains('<script src="jquery.min.js"></script>'), isFalse);
+  expect(doc.contains('<script src="summernote-lite.min.js"></script>'), isFalse);
+  expect(doc, contains('<script nonce="$_nonce">'));
+  expect('<script nonce="$_nonce"'.allMatches(doc).length, 4);
+}
+
+Future<void> _verifyFirstValidHostNonce(WidgetTester tester) async {
+  _appendHostScript(attribute: 'not valid', property: 'not valid');
+  _appendHostScript(attribute: _nonce, property: _nonce);
+
+  await _pumpEditor(tester, offline: false);
+
+  final doc = _editorSrcdoc();
+  expect(doc, contains('nonce="$_nonce"'));
+  expect(doc.contains('not valid'), isFalse);
+}
+
+Future<void> _verifyNoncePropertyWithoutAttribute(WidgetTester tester) async {
+  final element = web.document.createElement('script') as web.HTMLScriptElement
+    ..nonce = _nonce;
+  web.document.head!.append(element);
+  element.removeAttribute('nonce');
+  addTearDown(() => element.remove());
+  expect(element.hasAttribute('nonce'), isFalse);
+  expect(element.nonce, _nonce);
+
+  await _pumpEditor(tester, offline: false);
+
+  expect(_editorSrcdoc(), contains('nonce="$_nonce"'));
+}
+
+Future<void> _verifyInvalidHostNoncesOnly(WidgetTester tester) async {
+  _appendHostScript(attribute: 'not valid', property: 'not valid');
+
+  await _pumpEditor(tester, offline: true);
+
+  expect(_editorSrcdoc().contains('nonce='), isFalse);
+}
+
+void _timeAddNonceOnChrome() {
+  const sizes = [10000, 100000, 1000000];
+  final builders = <String, String Function(int)>{
+    'all <script ': (n) => '<script ' * (n ~/ 8) + ' ' * (n % 8),
+    'alternating <script-x/<script ': (n) {
+      const unit = '<script-x<script ';
+      return unit * (n ~/ unit.length) + ' ' * (n % unit.length);
+    },
+    'no match': (n) => 'a' * n,
+  };
+
+  for (final entry in builders.entries) {
+    final times = <int>[];
+    for (final n in sizes) {
+      final input = entry.value(n);
+      expect(input.length, n, reason: entry.key);
+      final stopwatch = Stopwatch()..start();
+      final stamped = NonceUtils.addNonceToScriptTags(input, _nonce);
+      stopwatch.stop();
+      times.add(stopwatch.elapsedMicroseconds);
+      if (entry.key.startsWith('all')) {
+        expect(stamped, contains('nonce="$_nonce"'), reason: entry.key);
+      } else if (entry.key == 'no match') {
+        expect(stamped, input, reason: entry.key);
+      } else {
+        expect(stamped, contains('<script-x'), reason: entry.key);
+      }
+      // ignore: avoid_print
+      print('chrome ${entry.key} $n chars: ${stopwatch.elapsedMicroseconds} us');
+    }
+    expect(times[1], lessThan(times[0] * 40 + 20000), reason: entry.key);
+    expect(times[2], lessThan(times[1] * 40 + 20000), reason: entry.key);
+  }
+}
+
+void _registerWidgetNonceTests() {
   group('HtmlEditorWidget (web) → script nonce', () {
     testWidgets(
       'stamps every script tag of the offline document and leaves the '
@@ -242,5 +374,69 @@ void main() {
       _verifyConsumerWebScriptBody,
       timeout: const Timeout(Duration(seconds: 60)),
     );
+
+    testWidgets(
+      'keeps a custom filePath template unchanged while package tags carry the nonce',
+      _verifyCustomFilePathTemplate,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    testWidgets(
+      'inlines a custom template\'s vendor scripts and stamps those tags',
+      _verifyCustomTemplateOfflineInline,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    testWidgets(
+      'uses the first valid host nonce when an earlier one is invalid',
+      _verifyFirstValidHostNonce,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    testWidgets(
+      'reads a host nonce set only on the script property',
+      _verifyNoncePropertyWithoutAttribute,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    testWidgets(
+      'adds no nonce when every host nonce is invalid',
+      _verifyInvalidHostNoncesOnly,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
   });
+}
+
+void main() {
+  setUp(() {
+    _filePathOverride = null;
+    _templateOverride = null;
+    _pluginsOverride = const [];
+  });
+
+  setUpAll(() async {
+    final jquery = await _fetchAsset(HtmlEditorConstants.jqueryAssetPath);
+    final summernoteJs =
+        await _fetchAsset(HtmlEditorConstants.summernoteJSAssetPath);
+    _inlinedInnerScriptCount = '<script'.allMatches(jquery).length +
+        '<script'.allMatches(summernoteJs).length;
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMessageHandler('flutter/assets', _serveAsset);
+    _installIframeCaptureHook();
+  });
+
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMessageHandler('flutter/assets', null);
+    _uninstallIframeCaptureHook();
+  });
+
+  _registerWidgetNonceTests();
+
+  test(
+    'addNonceToScriptTags stays linear on tag-shaped inputs',
+    _timeAddNonceOnChrome,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
 }

@@ -114,6 +114,51 @@ void main() {
       expect(_scriptTagCount(html), 1 + _scriptTagCount(body));
     });
 
+    test('stamps <SCRIPT> and leaves <script-x untouched', () {
+      const html = '<SCRIPT src="a.js"></SCRIPT><script-x>keep</script-x>';
+
+      final stamped = NonceUtils.addNonceToScriptTags(html, _nonce);
+
+      expect(stamped,
+          '<script nonce="$_nonce" src="a.js"></SCRIPT><script-x>keep</script-x>');
+    });
+
+    test('addNonceToScriptTags stays linear on tag-shaped inputs', () {
+      const sizes = [10000, 100000, 1000000];
+      final builders = <String, String Function(int)>{
+        'all <script ': (n) => '<script ' * (n ~/ 8) + ' ' * (n % 8),
+        'alternating <script-x/<script ': (n) {
+          const unit = '<script-x<script ';
+          return unit * (n ~/ unit.length) + ' ' * (n % unit.length);
+        },
+        'no match': (n) => 'a' * n,
+      };
+
+      for (final entry in builders.entries) {
+        final times = <int>[];
+        for (final n in sizes) {
+          final input = entry.value(n);
+          expect(input.length, n, reason: entry.key);
+          final stopwatch = Stopwatch()..start();
+          final stamped = NonceUtils.addNonceToScriptTags(input, _nonce);
+          stopwatch.stop();
+          times.add(stopwatch.elapsedMicroseconds);
+          if (entry.key.startsWith('all')) {
+            expect(stamped, contains('nonce="$_nonce"'), reason: entry.key);
+          } else if (entry.key == 'no match') {
+            expect(stamped, input, reason: entry.key);
+          } else {
+            expect(stamped, contains('<script-x'), reason: entry.key);
+            expect(stamped.contains('script-x nonce'), isFalse, reason: entry.key);
+          }
+          // ignore: avoid_print
+          print('${entry.key} $n chars: ${stopwatch.elapsedMicroseconds} us');
+        }
+        expect(times[1], lessThan(times[0] * 40 + 20000), reason: entry.key);
+        expect(times[2], lessThan(times[1] * 40 + 20000), reason: entry.key);
+      }
+    });
+
     test('null, empty or invalid nonce leaves the html identical', () {
       final template = _asset('summernote-no-plugins.html');
       final bad = <String?>[
