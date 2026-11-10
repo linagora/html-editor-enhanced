@@ -348,8 +348,99 @@ void _timeAddNonceOnChrome() {
   }
 }
 
+/// Records every CSP violation inside the editor document, so blocked inline
+/// handlers, eval or unstamped scripts fail the test, not only blocked tags.
+const _violationRecorder = '<script nonce="$_nonce">'
+    'var root = document.documentElement;'
+    'root.setAttribute("data-csp-violations", "");'
+    'document.addEventListener("securitypolicyviolation", function (e) {'
+    'var seen = root.getAttribute("data-csp-violations");'
+    'root.setAttribute("data-csp-violations",'
+    ' seen + e.effectiveDirective + " " + e.blockedURI + "\\n");'
+    '});'
+    '</script>';
+
+/// Puts a nonce-only script policy at the top of the editor document. The meta
+/// policy binds only that document, so the test runner page keeps running.
+String _underNonceOnlyPolicy(String doc, String policyNonce) {
+  expect(doc, contains('<head>'));
+  final policy = '<meta http-equiv="Content-Security-Policy" '
+      'content="script-src \'nonce-$policyNonce\'">';
+  return doc.replaceFirst('<head>', '<head>$policy$_violationRecorder');
+}
+
+/// Platform views never reach the DOM in widget tests, so the captured srcdoc
+/// is booted in a real iframe that waits until summernote builds its editor.
+Future<web.HTMLIFrameElement> _bootInRealIframe(
+  WidgetTester tester,
+  String srcdoc,
+) async {
+  final frame = web.HTMLIFrameElement()..srcdoc = srcdoc.toJS;
+  web.document.body!.append(frame);
+  addTearDown(() => frame.remove());
+  for (var i = 0; i < 50; i++) {
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+    if (_hasSummernoteEditor(frame)) break;
+  }
+  return frame;
+}
+
+bool _hasSummernoteEditor(web.HTMLIFrameElement frame) =>
+    frame.contentDocument?.querySelector('.note-editor') != null;
+
+List<String> _recordedViolations(web.HTMLIFrameElement frame) {
+  // Kept in a DOM attribute: values from the iframe's JS realm fail Dart casts.
+  final recorded = frame.contentDocument?.documentElement
+      ?.getAttribute('data-csp-violations');
+  if (recorded == null) return const ['the violation recorder never ran'];
+  return recorded.split('\n').where((line) => line.isNotEmpty).toList();
+}
+
+Future<String> _offlineSrcdocWithHostNonce(WidgetTester tester) async {
+  final hostScript = _addHostScriptWithNonce();
+  addTearDown(() => hostScript.remove());
+  await _pumpEditor(tester, offline: true);
+  return _editorSrcdoc();
+}
+
+Future<void> _verifyEditorBootsUnderNoncePolicy(WidgetTester tester) async {
+  final doc = await _offlineSrcdocWithHostNonce(tester);
+
+  final frame =
+      await _bootInRealIframe(tester, _underNonceOnlyPolicy(doc, _nonce));
+
+  expect(_recordedViolations(frame), isEmpty);
+  expect(_hasSummernoteEditor(frame), isTrue,
+      reason: 'summernote must build its editor under a nonce-only policy');
+}
+
+Future<void> _verifyEditorBlockedUnderForeignNoncePolicy(
+  WidgetTester tester,
+) async {
+  final doc = await _offlineSrcdocWithHostNonce(tester);
+
+  final frame = await _bootInRealIframe(
+      tester, _underNonceOnlyPolicy(doc, 'someOtherNonce1'));
+
+  expect(_hasSummernoteEditor(frame), isFalse,
+      reason: 'a policy with another nonce must block the editor scripts');
+}
+
 void _registerWidgetNonceTests() {
   group('HtmlEditorWidget (web) → script nonce', () {
+    testWidgets(
+      'boots the offline editor under a nonce-only script policy',
+      _verifyEditorBootsUnderNoncePolicy,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    testWidgets(
+      'the editor does not boot when the policy holds another nonce',
+      _verifyEditorBlockedUnderForeignNoncePolicy,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
     testWidgets(
       'stamps every script tag of the offline document and leaves the '
       'inlined jquery body untouched',
