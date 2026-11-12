@@ -88,6 +88,9 @@ class HtmlEditorOptions {
   /// If you plan to use this on Web, you must add comments in your HTML so the
   /// package can insert the relevant JS code to communicate between Dart and JS.
   /// See the README for more details on this.
+  ///
+  /// A custom template is used as-is, so under a nonce-based script policy its
+  /// own inline scripts must carry the nonce themselves.
   final String? filePath;
 
   /// Sets the Html editor's hint (text displayed when there is no text in the
